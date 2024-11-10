@@ -1,7 +1,7 @@
 from quart import Quart
 from quart_cors import cors
 from motor.motor_asyncio import AsyncIOMotorClient
-from .routes import register_routes
+from .routes import account_routes, auth_routes, attendance_routes, meeting_routes
 from .config import Config
 import logging
 from logging.handlers import TimedRotatingFileHandler, QueueHandler, QueueListener
@@ -55,6 +55,9 @@ def create_app():
     app.logger_listener = listener
 
     # Register API routes
-    register_routes(app)
+    app.register_blueprint(account_routes.account_api, url_prefix="/api/account")
+    app.register_blueprint(auth_routes.auth_api, url_prefix="/api/auth")
+    app.register_blueprint(attendance_routes.attendance_api, url_prefix="/api/attendance")
+    app.register_blueprint(meeting_routes.meeting_api, url_prefix="/api/meeting")
 
     return app

@@ -1,4 +1,5 @@
 from pydantic import ValidationError
+from typing import Any
 
 def format_validation_error(error: ValidationError) -> str:
     """
@@ -8,5 +9,5 @@ def format_validation_error(error: ValidationError) -> str:
     :return: A formatted string summarizing all validation issues.
     """
     return "; ".join(
-        f"{err['loc'][0]}: {err['msg']}" for err in error.errors()
+        f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in error.errors()
     )
