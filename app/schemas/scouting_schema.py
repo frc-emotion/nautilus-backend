@@ -1,4 +1,4 @@
 from pydantic import BaseModel
 
-class AttendanceSchema(BaseModel):
+class ScoutingSchema(BaseModel):
     ...

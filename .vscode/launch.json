@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Quart (Poetry)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "cwd": "${workspaceFolder}",
+            "args": [],
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "POETRY_ACTIVE": "1"
+            },
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}"
+        }
+    ]
+}
