@@ -1,9 +1,20 @@
 import os
 
 class Config:
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-    DEBUG = os.getenv("DEBUG", "True").lower() == "true"
-    JWT_SECRET = os.getenv("JWT_SECRET", "")
-    DB_NAME = os.getenv("DB_NAME", "nautilus-dev")
-    API_VERSION = "1.0"
-    JWT_EXPIRY_DAYS = 3
+    # MongoDB connection URI, defaulting to localhost for development
+    MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+    
+    # Debug mode enabled if environment variable DEBUG is "true" (case-insensitive)
+    DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
+    
+    # Secret key for JWT encoding/decoding
+    JWT_SECRET: str = os.getenv("JWT_SECRET", "")
+    
+    # Database name, defaulting to a development database
+    DB_NAME: str = os.getenv("DB_NAME", "nautilus-dev")
+    
+    # API versioning
+    API_VERSION: str = "1.0"
+    
+    # JWT expiry duration in days
+    JWT_EXPIRY_DAYS: int = int(os.getenv("JWT_EXPIRY_DAYS", "3"))

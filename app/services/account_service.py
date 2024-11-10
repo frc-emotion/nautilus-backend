@@ -1,57 +1,69 @@
 from quart import current_app
+from typing import Dict, Any, Optional
 import datetime
+import jwt
 from app.config import Config
-import jwt 
+from pymongo.results import UpdateResult, DeleteResult, InsertOneResult
 
-# Roles: "admin", "executive", "advisor", "mentor", "leadership", "member"
+async def generate_jwt_token(user: Dict[str, Any]) -> str:
+    """Generate a JWT token for authenticated users."""
+    payload = {
+        "user_id": str(user["_id"]),
+        "role": user["role"],
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=Config.JWT_EXPIRY_DAYS),
+    }
+    return jwt.encode(payload, Config.JWT_SECRET, algorithm="HS256")
 
-async def generate_jwt_token(user_data):
-    # Generate a new JWT token
-    token = jwt.encode(
-        {
-            "user_id": str(user_data["_id"]),
-            "role": str(user_data["role"]),
-            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=Config.JWT_EXPIRY_DAYS),
-            "iat": datetime.datetime.now(datetime.timezone.utc),
-        },
-        Config.JWT_SECRET,
-        algorithm="HS256"
-        )
-    return token
+async def get_collection(collection_name: str):
+    """Helper to retrieve a MongoDB collection from the current app's database."""
+    return current_app.db[collection_name]
 
-async def find_user_by_email(email):
-    users_collection = current_app.db["users"]
+async def find_user_by_email(email: str) -> Optional[Dict[str, Any]]:
+    """Retrieve user by email."""
+    account_collection = await get_collection("users")
+    return await account_collection.find_one({"email": email})
 
-    user = await users_collection.find_one({"email": email})
-    return user
+async def find_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
+    """Retrieve user by ID."""
+    account_collection = await get_collection("users")
+    return await account_collection.find_one({"_id": user_id})
 
-async def find_user_by_id(user_id):
-    users_collection = current_app.db["users"]
+async def add_new_user(data: Dict[str, Any]) -> InsertOneResult:
+    """Add a new user."""
+    account_collection = await get_collection("users")
 
-    user = await users_collection.find_one({"_id": user_id})
-    return user
+    data["_id"] = await account_collection.count_documents({}) + 1 # since we need user id to be a 16 bit integer
 
-async def update_user(user_id, data):
-    users_collection = current_app.db["users"]
+    return await account_collection.insert_one(data)
 
-    result = await users_collection.update_one({"_id": user_id}, {"$set": data})
-    return result
+async def update_user(user_id: int, data: Dict[str, Any]) -> UpdateResult:
+    """Update user's data."""
+    account_collection = await get_collection("users")
+    return await account_collection.update_one({"_id": user_id}, {"$set": data})
 
-async def delete_user(user_id):
-    users_collection = current_app.db["users"]
+async def delete_user(user_id: int) -> DeleteResult:
+    """Delete a user by ID."""
+    account_collection = await get_collection("users")
+    return await account_collection.delete_one({"_id": user_id})
 
-    result = await users_collection.delete_one({"_id": user_id})
-    return result
+async def update_user_role(user_id: int, role: str) -> UpdateResult:
+    """Update user's role."""
+    account_collection = await get_collection("users")
+    return await account_collection.update_one({"_id": user_id}, {"$set": {"role": role}})
 
-async def add_new_user(data):
-    users_collection = current_app.db["users"]
+async def update_user_profile(user_id: int, data: Dict[str, Any]) -> UpdateResult:
+    """Update user's profile."""
+    account_collection = await get_collection("users")
+    return await account_collection.update_one({"_id": user_id}, {"$set": data})
 
-    result = await users_collection.insert_one(data)
-    return result
+async def get_all_users() -> list[Dict[str, Any]]:
+    """Retrieve all users."""
+    account_collection = await get_collection("users")
 
-async def modify_user(user_id, key, value):
-    users_collection = current_app.db["users"]
-    
-    result = await users_collection.update_one({"_id": user_id}, {"$set": {key: value}})
-    return result
-    
+    allUsers = await account_collection.find().to_list(None)
+
+    # Remove password field from all users
+    for user in allUsers:
+        del user["password"]
+
+    return allUsers

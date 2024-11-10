@@ -1,79 +1,108 @@
-from pydantic import ValidationError
-from quart import jsonify, current_app
+from quart import current_app
 from app.config import Config
-import app.services.account_service as account_service
-from app.schemas.register_schema import RegisterSchema
-from app.schemas.login_schema import LoginSchema
-from werkzeug.security import generate_password_hash, check_password_hash
+from app.services import account_service
+from app.schemas.auth_schema import RegisterSchema, LoginSchema, UpdateUserSchema
 from app.schemas.utils import format_validation_error
+from werkzeug.security import generate_password_hash, check_password_hash
+from typing import Any, Dict
+from pydantic import ValidationError
 
-async def register_user(data):
-    # Validate incoming data using RegisterSchema
+def error_response(message: str, status: int) -> Dict[str, Any]:
+    """Returns a standardized error response."""
+    current_app.logger.error(message)
+    return {"error": message, "status": status}
+
+def validate_schema(data: Dict[str, Any], schema):
+    """Validate data against a schema and return error message if validation fails."""
     try:
-        # Validate incoming data using RegisterSchema
-        validated_data = RegisterSchema(**data)
-        current_app.logger.info(f"Register data validated successfully for email: {validated_data.email}")
+        return schema(**data), None
     except ValidationError as e:
-        # Log validation error and return a formatted error message
-        current_app.logger.error(f"Validation error in register data: {e.errors()}")
-        return {"error": format_validation_error(e), "status": 400}
+        return None, format_validation_error(e)
 
-    # Check if the email is already taken
-    existing_user = await account_service.find_user_by_email(validated_data.email)
-    if existing_user:
-        current_app.logger.warning(f"Attempt to register with existing email: {validated_data.email}")
-        return {"error": "Email already taken", "status": 409}
+async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Register a new user with validated data."""
+    validated_data, error = validate_schema(data, RegisterSchema)
+    if error:
+        return error_response(error, 400)
+    if await account_service.find_user_by_email(validated_data.email):
+        return error_response("Email already taken", 409)
 
-    # Validate password requirements
-    if len(validated_data.password) < 8 or \
-       not any(char.isalpha() for char in validated_data.password) or \
-       not any(char.isdigit() for char in validated_data.password):
-        current_app.logger.warning(f"Password validation failed for email: {validated_data.email}")
-        return {"error": "Password must be at least 8 characters long and contain at least 1 letter and 1 number", "status": 400}
+    if not (len(validated_data.password) >= 8 and any(char.isalpha() for char in validated_data.password) and any(char.isdigit() for char in validated_data.password)):
+        return error_response("Password must be at least 8 characters long, contain a letter and a number", 400)
 
-    # Hash the password before storing it
-    hashed_password = generate_password_hash(validated_data.password)
-    
-    # Prepare data for insertion
     user_data = validated_data.model_dump(exclude_unset=True)
-    user_data["password"] = hashed_password
-    user_data["api_version"] = Config.API_VERSION
-    user_data["role"] = "unverified"
+    user_data["password"] = generate_password_hash(validated_data.password)
+    user_data.update({"api_version": Config.API_VERSION, "role": "unverified"})
 
-    # Insert the new user into the database
-    result = await account_service.add_new_user(user_data)
-    if not result.inserted_id:
-        current_app.logger.error(f"Failed to insert new user for email: {validated_data.email}")
-        return {"error": "Something went wrong creating your account. Please report this immediately!", "status": 500}
+    if not (result := await account_service.add_new_user(user_data)).inserted_id:
+        return error_response("Error creating account. Please try again later!", 500)
 
-    # Log success and return response
-    current_app.logger.info(f"User registered successfully with email: {validated_data.email}")
     return {"message": "User registered successfully", "status": 201}
 
-async def login_user(data):
-    # Validate incoming data using LoginSchema
-    try:
-        validated_data = LoginSchema(**data)
-        current_app.logger.info(f"Login data validated successfully for email: {validated_data.email}")
-    except ValidationError as e:
-        # Log validation error and return a response
-        current_app.logger.error(f"Validation error in login data: {e.errors()}")
-        return {"error": format_validation_error(e), "status": 400}
-
-    # Attempt to find the user by email
+async def login_user(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Authenticate a user and generate a JWT token."""
+    validated_data, error = validate_schema(data, LoginSchema)
+    if error:
+        return error_response(error, 400)
+    
     user = await account_service.find_user_by_email(validated_data.email)
-    if not user:
-        current_app.logger.warning(f"Login attempt failed for non-existent email: {validated_data.email}")
-        return {"error": "Invalid email or password", "status": 401}
+    if not user or not check_password_hash(user["password"], validated_data.password):
+        return error_response("Invalid email or password", 401)
 
-    # Check if the password is correct
-    if not check_password_hash(user["password"], validated_data.password):
-        current_app.logger.warning(f"Invalid password attempt for email: {validated_data.email}")
-        return {"error": "Invalid email or password", "status": 401}
-
-    # Generate a new JWT token upon successful login
     token = await account_service.generate_jwt_token(user)
-    current_app.logger.info(f"User logged in successfully with email: {validated_data.email}")
-
-    # Return the token as a response
     return {"token": token, "status": 200}
+
+async def update_user(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
+    """Update user data by user ID."""
+    validated_data, error = validate_schema(data, UpdateUserSchema)
+    if error:
+        return error_response(error, 400)
+    
+    result = await account_service.update_user(user_id, validated_data.model_dump(exclude_unset=True))
+    if not result.modified_count:
+        return error_response("Not found or unchanged", 404)
+
+    return {"message": "User updated", "status": 200}
+
+async def delete_user(user_id: int) -> Dict[str, Any]:
+    """Delete a user by user ID."""
+    if not (result := await account_service.delete_user(user_id)).deleted_count:
+        return error_response("User not found", 404)
+
+    return {"message": "User deleted", "status": 200}
+
+async def get_all_users() -> Dict[str, Any]:
+    """Retrieve all users."""
+    users = await account_service.get_all_users()
+    if not users:
+        return error_response("No users found", 404)
+
+    return {"users": users, "status": 200}
+
+async def get_user_by_id(user_id: int) -> Dict[str, Any]:
+    """Retrieve a specific user by their ID."""
+    if not (user := await account_service.find_user_by_id(user_id)):
+        return error_response("User not found", 404)
+    
+    # Remove password field from user
+    user.pop("password", None)
+
+    return {"user": user, "status": 200}
+
+async def update_user_role(user_id: int, role: str) -> Dict[str, Any]:
+    """Update a user's role by user ID."""
+    # Ensure role is valid
+    if role not in Config.VALID_ROLES:
+        return error_response("Invalid role", 400)
+    
+    if not (result := await account_service.update_user_role(user_id, role)).modified_count:
+        return error_response("Not found or unchanged", 404)
+
+    return {"message": "User role updated", "status": 200}
+
+async def update_user_profile(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
+    """Update a user's profile by user ID."""
+    if not (result := await account_service.update_user_profile(user_id, data)).modified_count:
+        return error_response("Not found or unchanged", 404)
+
+    return {"message": "User profile updated", "status": 200}
