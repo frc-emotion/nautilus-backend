@@ -12,6 +12,8 @@ quart = "^0.19.6"
 quart-schema = "^0.20.0"
 quart-rate-limiter = "^0.10.0"
 quart-mongo = "^0.1.2"
+pyjwt = "^2.9.0"
+quart-cors = "^0.7.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.24.0"
