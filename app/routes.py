@@ -43,7 +43,7 @@ def require_access(roles=None, permissions=None):
             permission_allowed = not missing_permissions
 
             # Logging for debugging if access is denied
-            if not (role_allowed or permission_allowed):
+            if not (role_allowed and permission_allowed):
                 # Log the missing roles and permissions
                 missing_info = {
                     "missing_roles": [] if role_allowed else roles,
@@ -55,7 +55,7 @@ def require_access(roles=None, permissions=None):
                     f"Required permissions: {permissions}. Missing: {missing_info}"
                 )
                 return jsonify({
-                    "error": "Access denied",
+                    "error": "Access denied. You do not have the required roles or permissions to access this route",
                     "details": missing_info
                 }), 403
 
@@ -91,6 +91,10 @@ def authenticate_user():
             # Set g.user to None if token is invalid
             g.user = None
             current_app.logger.warning("Invalid token provided for authentication")
+        except jwt.ExpiredSignatureError:
+            # Set g.user to None if token is expired
+            g.user = None
+            current_app.logger.warning("Expired token provided for authentication")
     else:
         # No user if no token provided
         g.user = None 
@@ -124,15 +128,26 @@ async def login():
         current_app.logger.info("User logged in successfully")
     return jsonify(result), result.get("status", 200)
 
-@api.route("/test_auth")
+@api.route("/test_admin")
 @require_access(roles=["admin"])
-def protected_route():
+async def protected_route():
     # Protected route example requiring user to be logged in
     if not g.user:
         current_app.logger.warning("Unauthorized access attempt to protected route")
         return jsonify({"error": "Unauthorized"}), 401
     current_app.logger.info(f"Protected route accessed by user {g.user['user_id']}")
     return jsonify({"message": f"Hello, user {g.user['user_id']}"}), 200
+
+@api.route("/test_auth")
+@require_access(roles=["unverified"])
+async def protected_route2():
+    # Protected route example requiring user to be logged in
+    if not g.user:
+        current_app.logger.warning("Unauthorized access attempt to protected route")
+        return jsonify({"error": "Unauthorized"}), 401
+    current_app.logger.info(f"Protected route accessed by user {g.user['user_id']}")
+    return jsonify({"message": f"Hello, user {g.user['user_id']}"}), 200
+
 
 def register_routes(app):
     # Register API routes
