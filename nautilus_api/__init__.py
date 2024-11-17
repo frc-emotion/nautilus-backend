@@ -18,8 +18,7 @@ logger.setLevel(logging.INFO)
 
 # Create log handlers
 console_handler = logging.StreamHandler()
-file_handler = TimedRotatingFileHandler("nautilus-backend.log", when="midnight", interval=1)
-file_handler.prefix = "%Y-%m-%d-"
+file_handler = TimedRotatingFileHandler("nautilus-backend-%Y-%m-%d.log", when="midnight", interval=1)
 
 # Set log formatting
 formatter = logging.Formatter(

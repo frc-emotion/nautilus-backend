@@ -1,4 +1,5 @@
 import datetime
+import jwt
 from quart import current_app
 from nautilus_api.config import Config
 from nautilus_api.services import account_service
@@ -62,7 +63,14 @@ async def login_user(data: Dict[str, Any]) -> Dict[str, Any]:
         return error_response("Invalid email or password", 401)
 
     token = await account_service.generate_jwt_token(user)
-    return {"token": token, "status": 200}
+
+    # Remove password field from user
+    user.pop("password", None)
+
+    # Return token and user data
+    user.update({"token": token})
+
+    return {"user": user, "status": 200}
 
 async def update_user(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
     """Update user data by user ID."""
@@ -118,3 +126,12 @@ async def update_user_profile(user_id: int, data: Dict[str, Any]) -> Dict[str, A
         return error_response("Not found or unchanged", 404)
 
     return {"message": "User profile updated", "status": 200}
+
+async def generate_jwt_token(user: Dict[str, Any]) -> str:
+    """Generate a JWT token for a user."""
+    payload = {
+        "user_id": user["_id"],
+        "role": user["role"],
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=Config.JWT_EXPIRY_DAYS),
+    }
+    return jwt.encode(payload, Config.JWT_SECRET, algorithm="HS256")
