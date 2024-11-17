@@ -2,7 +2,7 @@ from quart import current_app
 from typing import Dict, Any, Optional
 import datetime
 import jwt
-from app.config import Config
+from nautilus_api.config import Config
 from pymongo.results import UpdateResult, DeleteResult, InsertOneResult
 
 async def generate_jwt_token(user: Dict[str, Any]) -> str:
@@ -27,6 +27,11 @@ async def find_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
     """Retrieve user by ID."""
     account_collection = await get_collection("users")
     return await account_collection.find_one({"_id": user_id})
+
+async def find_user_by_student_id(user_id: int) -> Optional[Dict[str, Any]]:
+    """Retrieve user by student_id."""
+    account_collection = await get_collection("users")
+    return await account_collection.find_one({"student_id": user_id})
 
 async def add_new_user(data: Dict[str, Any]) -> InsertOneResult:
     """Add a new user."""

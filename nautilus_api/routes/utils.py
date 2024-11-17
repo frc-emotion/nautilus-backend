@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Callable, List, Optional, Union
 from quart import current_app, g, jsonify
-from app.permissions import ROLE_HIERARCHY
+from nautilus_api.permissions import ROLE_HIERARCHY
 
 def require_access(minimum_role: Optional[str] = None, specific_roles: Optional[List[str]] = None) -> Callable:
     """
