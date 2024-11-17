@@ -25,9 +25,9 @@ class RegisterSchema(BaseModel):
         return value
 
     @field_validator("phone")
-    def check_phone(cls, value: str) -> str:
+    def check_phone(cls, value: int) -> int:
         """Ensure phone number is exactly 10 digits."""
-        if not value.isdigit() or len(value) != 10:
+        if not len(str(value)) != 9:
             raise ValueError("Phone number must be exactly 10 digits")
         return value
     

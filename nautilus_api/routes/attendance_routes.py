@@ -1,9 +1,9 @@
 import jwt
 from quart import Blueprint, jsonify, g, request, current_app
 from typing import Optional, Any, Dict
-from app.config import Config
-from app.controllers import attendance_controller
-from app.routes.utils import require_access
+from nautilus_api.config import Config
+from nautilus_api.controllers import attendance_controller
+from nautilus_api.routes.utils import require_access
 
 attendance_api = Blueprint('attendance_api', __name__)
 

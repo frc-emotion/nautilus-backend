@@ -1,8 +1,8 @@
 import jwt
 from quart import Blueprint, jsonify, g, request, current_app
-from app.config import Config
-from app.controllers import account_controller
-from app.routes.utils import require_access
+from nautilus_api.config import Config
+from nautilus_api.controllers import account_controller
+from nautilus_api.routes.utils import require_access
 from typing import Optional, Any, Dict
 
 account_api = Blueprint("account_api", __name__)

@@ -1,9 +1,9 @@
 from pydantic import ValidationError
 from quart import current_app
 from typing import Any, Dict, Union
-import app.services.attendance_service as attendance_service
-from app.schemas.attendance_schema import MeetingSchema, AttendanceLogSchema, AttendanceUserSchema, RemoveAttendanceLogSchema
-from app.schemas.utils import format_validation_error
+import nautilus_api.services.attendance_service as attendance_service
+from nautilus_api.schemas.attendance_schema import MeetingSchema, AttendanceLogSchema, AttendanceUserSchema, RemoveAttendanceLogSchema
+from nautilus_api.schemas.utils import format_validation_error
 
 # Helper function for data validation
 async def validate_data(schema, data: Dict[str, Any], action: str) -> Union[Any, Dict[str, Union[str, int]]]:

@@ -1,8 +1,9 @@
+import datetime
 from quart import current_app
-from app.config import Config
-from app.services import account_service
-from app.schemas.auth_schema import RegisterSchema, LoginSchema, UpdateUserSchema
-from app.schemas.utils import format_validation_error
+from nautilus_api.config import Config
+from nautilus_api.services import account_service
+from nautilus_api.schemas.auth_schema import RegisterSchema, LoginSchema, UpdateUserSchema
+from nautilus_api.schemas.utils import format_validation_error
 from werkzeug.security import generate_password_hash, check_password_hash
 from typing import Any, Dict
 from pydantic import ValidationError
@@ -24,15 +25,26 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
     validated_data, error = validate_schema(data, RegisterSchema)
     if error:
         return error_response(error, 400)
+    
     if await account_service.find_user_by_email(validated_data.email):
         return error_response("Email already taken", 409)
+    
+    if await account_service.find_user_by_student_id(validated_data.student_id):
+        return error_response("Student ID already taken", 409)
 
     if not (len(validated_data.password) >= 8 and any(char.isalpha() for char in validated_data.password) and any(char.isdigit() for char in validated_data.password)):
         return error_response("Password must be at least 8 characters long, contain a letter and a number", 400)
 
     user_data = validated_data.model_dump(exclude_unset=True)
-    user_data["password"] = generate_password_hash(validated_data.password)
-    user_data.update({"api_version": Config.API_VERSION, "role": "unverified"})
+    user_data.update(
+        {
+            "api_version": Config.API_VERSION, 
+            "role": "unverified", 
+            "password": generate_password_hash(validated_data.password),
+            "created_at": datetime.datetime.now()
+            
+            })
+
 
     if not (result := await account_service.add_new_user(user_data)).inserted_id:
         return error_response("Error creating account. Please try again later!", 500)

@@ -1,6 +1,6 @@
 from quart import Blueprint, jsonify, g, request, current_app
 from typing import Dict, Union
-from app.controllers import account_controller
+from nautilus_api.controllers import account_controller
 
 auth_api = Blueprint('auth_api', __name__)
 
@@ -17,7 +17,7 @@ async def register() -> tuple[Dict[str, Union[str, int]], int]:
     """Register a new user account."""
 
     data = await request.get_json()
-    current_app.logger.info(f"Registering new user with data: {data.get('username', 'unknown')}")
+    current_app.logger.info(f"Registering new user with data: {data.get('email', 'unknown')}")
 
     result = await account_controller.register_user(data)
 
@@ -35,12 +35,12 @@ async def login():
 
     data = await request.get_json()
 
-    current_app.logger.info(f"Attempting to log in user with data: {data.get('username', 'unknown')}")
+    current_app.logger.info(f"Attempting to log in user with data: {data.get('email', 'unknown')}")
 
     result = await account_controller.login_user(data)
 
     if "error" in result:
-        current_app.logger.error(f"Failed login attempt for user: {data.get('username', 'unknown')}")
+        current_app.logger.error(f"Failed login attempt for user: {data.get('email', 'unknown')}")
     else:
         current_app.logger.info("User logged in successfully")
 
