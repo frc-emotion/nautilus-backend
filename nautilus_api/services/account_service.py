@@ -1,6 +1,6 @@
 from quart import current_app
 from typing import Dict, Any, Optional
-import datetime
+from datetime import datetime, timezone, timedelta
 import jwt
 from nautilus_api.config import Config
 from pymongo.results import UpdateResult, DeleteResult, InsertOneResult
@@ -10,7 +10,7 @@ async def generate_jwt_token(user: Dict[str, Any]) -> str:
     payload = {
         "user_id": str(user["_id"]),
         "role": user["role"],
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=Config.JWT_EXPIRY_DAYS),
+        "exp": datetime.now(timezone.utc) + timedelta(days=Config.JWT_EXPIRY_DAYS),
     }
     return jwt.encode(payload, Config.JWT_SECRET, algorithm="HS256")
 

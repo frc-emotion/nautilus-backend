@@ -83,7 +83,7 @@ async def update_user_role(user_id: str) -> tuple[Dict[str, Any], int]:
 
 # Update a user's profile 
 @account_api.route("/users/profile/<int:user_id>", methods=["PUT"])
-@require_access(specific_roles="member")
+@require_access(minimum_role="member")
 async def update_user_profile(user_id: str) -> tuple[Dict[str, Any], int]:
     """Update a user's profile by user ID."""
     data: Dict[str, Any] = await request.get_json()
@@ -93,12 +93,12 @@ async def update_user_profile(user_id: str) -> tuple[Dict[str, Any], int]:
     return jsonify(result), result.get("status", 200)
 
 @account_api.route("/validate", methods=["GET"])
-@require_access(specific_roles="unverified")
+@require_access(minimum_role="unverified")
 async def validate_token() -> tuple[Dict[str, Any], int]:
-    """Validate a JWT token and return an updated one (extended expiry)."""
+    """Validate a JWT token and return an updated one and user object (extended expiry)."""
     if not g.user:
         return jsonify({"error": "Invalid or expired token"}), 401
 
-    token = await account_controller.generate_jwt_token(g.user)
+    result = await account_controller.refresh_user(g.user)
 
-    return jsonify({"token": token}), 200
+    return jsonify(result), 200

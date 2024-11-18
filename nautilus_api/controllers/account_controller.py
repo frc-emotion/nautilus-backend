@@ -1,5 +1,4 @@
-import datetime
-import jwt
+from datetime import datetime, timezone
 from quart import current_app
 from nautilus_api.config import Config
 from nautilus_api.services import account_service
@@ -42,7 +41,7 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
             "api_version": Config.API_VERSION, 
             "role": "unverified", 
             "password": generate_password_hash(validated_data.password),
-            "created_at": datetime.datetime.now()
+            "created_at": datetime.now(timezone.utc)
             
             })
 
@@ -127,11 +126,20 @@ async def update_user_profile(user_id: int, data: Dict[str, Any]) -> Dict[str, A
 
     return {"message": "User profile updated", "status": 200}
 
-async def generate_jwt_token(user: Dict[str, Any]) -> str:
+async def refresh_user(user: Dict[str, Any]) -> str:
     """Generate a JWT token for a user."""
-    payload = {
-        "user_id": user["_id"],
-        "role": user["role"],
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=Config.JWT_EXPIRY_DAYS),
-    }
-    return jwt.encode(payload, Config.JWT_SECRET, algorithm="HS256")
+    
+    user = await account_service.find_user_by_id(int(user["user_id"]))
+
+    if not (user):
+        return error_response("User not found", 404)
+
+    token = await account_service.generate_jwt_token(user)
+
+    # Remove password field from user
+    user.pop("password", None)
+
+    # Return token and user data
+    user.update({"token": token})
+
+    return {"user": user, "status": 200}
