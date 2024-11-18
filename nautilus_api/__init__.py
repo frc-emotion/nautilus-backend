@@ -6,6 +6,14 @@ from .config import Config
 import logging
 from logging.handlers import TimedRotatingFileHandler, QueueHandler, QueueListener
 import queue
+import os
+
+def flip_name(log_path):
+    """flips the file name of a log file to put the date in front"""
+    
+    log_dir, log_filename = os.path.split(log_path)
+    file_name, timestamp = log_filename.rsplit(".", 1)
+    return os.path.join(log_dir, f"{timestamp}.{file_name}")
 
 mongo_client = None  # Global MongoDB client
 
@@ -18,7 +26,9 @@ logger.setLevel(logging.INFO)
 
 # Create log handlers
 console_handler = logging.StreamHandler()
-file_handler = TimedRotatingFileHandler("nautilus-backend-%Y-%m-%d.log", when="midnight", interval=1)
+file_handler = TimedRotatingFileHandler("nautilus-backend.log", when="midnight", interval=1)
+file_handler.suffix = "%Y-%m-%d"
+file_handler.namer = flip_name
 
 # Set log formatting
 formatter = logging.Formatter(
