@@ -7,6 +7,8 @@ import logging
 from logging.handlers import TimedRotatingFileHandler, QueueHandler, QueueListener
 import queue
 import os
+from beartype.claw import beartype_this_package
+beartype_this_package()
 
 def flip_name(log_path):
     """flips the file name of a log file to put the date in front"""
