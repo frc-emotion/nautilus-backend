@@ -108,8 +108,9 @@ async def get_user_by_id(user_id: int) -> Dict[str, Any]:
 
     return {"user": user, "status": 200}
 
-async def update_user_role(user_id: int, role: str) -> Dict[str, Any]:
+async def update_user_role(user_id: int, data: str) -> Dict[str, Any]:
     """Update a user's role by user ID."""
+    role=data["role"]
     # Ensure role is valid
     if role not in Config.VALID_ROLES:
         return error_response("Invalid role", 400)
