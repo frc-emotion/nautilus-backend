@@ -74,3 +74,11 @@ async def get_all_users() -> list[Dict[str, Any]]:
         del user["password"]
 
     return allUsers
+
+async def mass_verify_users(user_ids: list[int]) -> UpdateResult:
+    """Verify multiple users by setting their role to 'member'."""
+    account_collection = await get_collection("users")
+    return await account_collection.update_many(
+        {"_id": {"$in": user_ids}},
+        {"$set": {"role": "member"}}
+    )

@@ -2,10 +2,10 @@ from datetime import datetime, timezone
 from quart import current_app
 from nautilus_api.config import Config
 from nautilus_api.services import account_service
-from nautilus_api.schemas.auth_schema import RegisterSchema, LoginSchema, UpdateUserSchema
+from nautilus_api.schemas.auth_schema import RegisterSchema, LoginSchema, UpdateUserSchema, VerifyUsersSchema
 from nautilus_api.schemas.utils import format_validation_error
 from werkzeug.security import generate_password_hash, check_password_hash
-from typing import Any, Dict
+from typing import Any, Dict, List
 from pydantic import ValidationError
 
 def error_response(message: str, status: int) -> Dict[str, Any]:
@@ -107,16 +107,17 @@ async def get_user_by_id(user_id: int) -> Dict[str, Any]:
 
     return {"user": user, "status": 200}
 
-async def update_user_role(user_id: int, role: str) -> Dict[str, Any]:
-    """Update a user's role by user ID."""
-    # Ensure role is valid
-    if role not in Config.VALID_ROLES:
-        return error_response("Invalid role", 400)
+async def mass_verify_users(data: Dict[str, any]) -> Dict[str, Any]:
+    """Mass verify user's based on ID"""
+    validated_data, error = validate_schema(data, VerifyUsersSchema)
+    if error:
+        return error_response(error, 400)
     
-    if not (result := await account_service.update_user_role(user_id, role)).modified_count:
+    if not (verified := await account_service.mass_verify_users(data["users"])).modified_count:
         return error_response("Not found or unchanged", 404)
 
-    return {"message": "User role updated", "status": 200}
+    return {"message": "User profile updated", "status": 200}
+
 
 async def update_user_profile(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
     """Update a user's profile by user ID."""
@@ -125,7 +126,7 @@ async def update_user_profile(user_id: int, data: Dict[str, Any]) -> Dict[str, A
 
     return {"message": "User profile updated", "status": 200}
 
-async def refresh_user(user: Dict[str, Any]) -> str:
+async def refresh_user(user: Dict[str, Any]) -> Dict[str, Any]:
     """Generate a JWT token for a user."""
     
     user = await account_service.find_user_by_id(int(user["user_id"]))

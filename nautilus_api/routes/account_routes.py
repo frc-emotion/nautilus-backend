@@ -70,15 +70,15 @@ async def get_user_by_id(user_id: int) -> tuple[Dict[str, Any], int]:
     result: Dict[str, Any] = await account_controller.get_user_by_id(user_id)
     return jsonify(result), result.get("status", 200)
 
-# Verify a user's role
-@account_api.route("/users/role/<int:user_id>", methods=["PUT"])
-@require_access(specific_roles="executive")
-async def verify_user(user_id: str) -> tuple[Dict[str, Any], int]:
+# Mass verify users
+@account_api.route("/users/verify", methods=["POST"])
+@require_access(minimum_role="executive")
+async def verify_user() -> tuple[Dict[str, Any], int]:
     """Update a user's role by user ID."""
     data: Dict[str, Any] = await request.get_json()
     requester_id = g.user.get("user_id", "Unknown")
-    current_app.logger.info(f"User {requester_id} updating role for user with ID {user_id} using data: {data}")
-    result: Dict[str, Any] = await account_controller.update_user_role(user_id, data)
+    current_app.logger.info(f"User {requester_id} mass verifying users using data: {data}")
+    result: Dict[str, Any] = await account_controller.mass_verify_users(data)
     return jsonify(result), result.get("status", 200)
 
 # # Update a user's profile 
