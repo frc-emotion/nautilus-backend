@@ -11,7 +11,7 @@ class RegisterSchema(BaseModel):
     student_id: str = Field("N/A", description="7-character student ID (default is 'N/A')")  # e.g., 1234567
     email: str = Field(..., description="Email address of the user")  # e.g., arshansemail@gmail.com
     password: str = Field(..., description="Password of the user")  # e.g., arshanspassword123
-    phone: int = Field(..., description="10-digit phone number")  # e.g., 1234567890
+    phone: str = Field(..., description="10-digit phone number")  # e.g., 1234567890
     subteam: List[Literal["software", "electrical", "build", "marketing", "design"]] = Field(
         ..., description="Subteam(s) the user is joining"
     )  # e.g., ["software", "build"]
@@ -25,10 +25,14 @@ class RegisterSchema(BaseModel):
         return value
 
     @field_validator("phone")
-    def check_phone(cls, value: int) -> int:
+    def check_phone(cls, value: str) -> str:
         """Ensure phone number is exactly 10 digits."""
-        if not len(str(value)) != 9:
+        if not len(value) != 9:
             raise ValueError("Phone number must be exactly 10 digits")
+        
+        if not value.isdigit():
+            raise ValueError("Phone number must contain all digits")
+        
         return value
     
 class UpdateUserSchema(BaseModel):
@@ -36,7 +40,7 @@ class UpdateUserSchema(BaseModel):
     last_name: str = Field(None, description="Last name of the user")
     student_id: str = Field(None, description="7-character student ID")
     email: str = Field(None, description="Email address of the user")
-    phone: int = Field(None, description="10-digit phone number")
+    phone: str = Field(None, description="10-digit phone number")
     subteam: List[Literal["software", "electrical", "build", "marketing", "design"]] = Field(
         None, description="Subteam(s) the user is joining"
     )

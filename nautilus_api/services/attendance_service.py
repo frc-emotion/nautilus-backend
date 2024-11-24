@@ -7,19 +7,19 @@ async def get_collection(collection_name: str):
     """Helper to retrieve a MongoDB collection from the current app's database."""
     return current_app.db[collection_name]
 
-async def get_attendance_by_user_id(user_id: str) -> Optional[Dict[str, Any]]:
+async def get_attendance_by_user_id(user_id: int) -> Optional[Dict[str, Any]]:
     """Fetch attendance data for a specific user by user_id."""
     attendance_collection = await get_collection("attendance")
     return await attendance_collection.find_one({"_id": user_id})
 
-async def get_hours_by_user_id(user_id: str) -> int:
+async def get_hours_by_user_id(user_id: int) -> int:
     """Calculate total hours of attendance for a specific user by summing log hours."""
     user = await get_attendance_by_user_id(user_id)
     if not user:
         return 0
     return sum(log["hours"] for log in user.get("logs", []))
 
-async def log_attendance(data: Dict[str, Any], user_id: str) -> Union[UpdateResult, InsertOneResult]:
+async def log_attendance(data: Dict[str, Any], user_id: int) -> Union[UpdateResult, InsertOneResult]:
     """
     Log attendance for a user. If user already has attendance logs, append the new log.
     If not, create a new attendance document for the user.
@@ -43,13 +43,13 @@ async def log_attendance(data: Dict[str, Any], user_id: str) -> Union[UpdateResu
         # Append the new log to the user's existing attendance logs
         user["logs"].append(new_log)
         result = await attendance_collection.update_one(
-            {"_id": user_id},
+            {"_id": int(user_id)},
             {"$set": {"logs": user["logs"]}}
         )
     else:
         # Create a new attendance document with the log for the user
         result = await attendance_collection.insert_one({
-            "_id": user_id,
+            "_id": int(user_id),
             "logs": [new_log],
         })
     return result

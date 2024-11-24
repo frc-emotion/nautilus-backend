@@ -41,8 +41,7 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
             "api_version": Config.API_VERSION, 
             "role": "unverified", 
             "password": generate_password_hash(validated_data.password),
-            "created_at": datetime.now(timezone.utc)
-            
+            "created_at": datetime.now(timezone.utc).timestamp()    
             })
 
 

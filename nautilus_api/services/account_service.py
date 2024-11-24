@@ -8,7 +8,7 @@ from pymongo.results import UpdateResult, DeleteResult, InsertOneResult
 async def generate_jwt_token(user: Dict[str, Any]) -> str:
     """Generate a JWT token for authenticated users."""
     payload = {
-        "user_id": str(user["_id"]),
+        "user_id": int(user["_id"]),
         "role": user["role"],
         "exp": datetime.now(timezone.utc) + timedelta(days=Config.JWT_EXPIRY_DAYS),
     }

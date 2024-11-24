@@ -22,7 +22,7 @@ def format_response(message: str, status: int) -> Dict[str, Union[str, int]]:
     return {"message": message, "status": status}
 
 # Attendance logging function
-async def log_attendance(data: Dict[str, Any], user_id: str) -> Dict[str, Union[str, int]]:
+async def log_attendance(data: Dict[str, Any], user_id: int) -> Dict[str, Union[str, int]]:
     validated_data = await validate_data(AttendanceLogSchema, data, "Log Attendance")
     if isinstance(validated_data, dict): return validated_data  # Return error if validation failed
 
@@ -45,7 +45,7 @@ async def log_attendance(data: Dict[str, Any], user_id: str) -> Dict[str, Union[
     return format_response("Attendance logged", 201)
 
 # Function to get total attendance hours for a user
-async def get_attendance_hours(user_id: str) -> Dict[str, Union[int, str]]:
+async def get_attendance_hours(user_id: int) -> Dict[str, Union[int, str]]:
     try:
         total_hours = await attendance_service.get_hours_by_user_id(user_id)
         return {"total_hours": total_hours, "status": 200}
