@@ -112,7 +112,7 @@ async def update_user_role(user_id: int, data: str) -> Dict[str, Any]:
     """Update a user's role by user ID."""
     role=data["role"]
     # Ensure role is valid
-    if role not in Config.VALID_ROLES:
+    if role not in Config.ROLE_HIERARCHY:
         return error_response("Invalid role", 400)
     
     if not (result := await account_service.update_user_role(user_id, role)).modified_count:

@@ -19,4 +19,4 @@ class Config:
     # JWT expiry duration in days
     JWT_EXPIRY_DAYS: int = int(os.getenv("JWT_EXPIRY_DAYS", "3"))
 
-    VALID_ROLES:list =["unverified", "member", "leadership", "executive", "advisor", "admin"]
+    ROLE_HIERARCHY:list = ["unverified", "member", "leadership", "executive", "advisor", "admin"]
