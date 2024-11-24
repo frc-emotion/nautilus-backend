@@ -37,7 +37,9 @@ async def add_new_user(data: Dict[str, Any]) -> InsertOneResult:
     """Add a new user."""
     account_collection = await get_collection("users")
 
-    data["_id"] = await account_collection.count_documents({}) + 1 # since we need user id to be a 16 bit integer
+    all_users = await account_collection.find().to_list(None)
+
+    data["_id"] = all_users[-1]["_id"] + 1 # since we need user id to be a 16 bit integer
 
     return await account_collection.insert_one(data)
 
