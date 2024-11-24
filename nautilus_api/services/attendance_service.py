@@ -142,14 +142,6 @@ async def update_meeting(meeting_id: int, data: Dict[str, Any]) -> UpdateResult:
     meeting_collection = await get_collection("meetings")
     return await meeting_collection.update_one({"_id": meeting_id}, {"$set": data})
 
-async def hide_meeting(meeting_id: int) -> DeleteResult:
-    """Hide a meeting document by its unique ID."""
-    meeting_collection = await get_collection("meetings")
-
-    # Set the `hidden` field to True to hide the meeting
-    return await meeting_collection.update_one({"_id": meeting_id}, {"$set": {"hidden": True}})
-    
-
 async def get_all_meetings() -> List[Dict[str, Any]]:
     """Retrieve all meeting documents from the database."""
     meeting_collection = await get_collection("meetings")
