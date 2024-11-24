@@ -76,7 +76,7 @@ async def update_user(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
     if error:
         return error_response(error, 400)
     
-    result = await account_service.update_user(user_id, validated_data.model_dump(exclude_unset=True))
+    result = await account_service.update_user(user_id, data)
     if not result.modified_count:
         return error_response("Not found or unchanged", 404)
 

@@ -70,10 +70,10 @@ async def get_user_by_id(user_id: int) -> tuple[Dict[str, Any], int]:
     result: Dict[str, Any] = await account_controller.get_user_by_id(user_id)
     return jsonify(result), result.get("status", 200)
 
-# Update a user's role
+# Verify a user's role
 @account_api.route("/users/role/<int:user_id>", methods=["PUT"])
-@require_access(specific_roles="admin")
-async def update_user_role(user_id: str) -> tuple[Dict[str, Any], int]:
+@require_access(specific_roles="executive")
+async def verify_user(user_id: str) -> tuple[Dict[str, Any], int]:
     """Update a user's role by user ID."""
     data: Dict[str, Any] = await request.get_json()
     requester_id = g.user.get("user_id", "Unknown")
@@ -81,16 +81,16 @@ async def update_user_role(user_id: str) -> tuple[Dict[str, Any], int]:
     result: Dict[str, Any] = await account_controller.update_user_role(user_id, data)
     return jsonify(result), result.get("status", 200)
 
-# Update a user's profile 
-@account_api.route("/users/profile/<int:user_id>", methods=["PUT"])
-@require_access(minimum_role="member")
-async def update_user_profile(user_id: str) -> tuple[Dict[str, Any], int]:
-    """Update a user's profile by user ID."""
-    data: Dict[str, Any] = await request.get_json()
-    requester_id = g.user.get("user_id", "Unknown")
-    current_app.logger.info(f"User {requester_id} updating profile for user with ID {user_id} using data: {data}")
-    result: Dict[str, Any] = await account_controller.update_user_profile(user_id, data)
-    return jsonify(result), result.get("status", 200)
+# # Update a user's profile 
+# @account_api.route("/users/profile/<int:user_id>", methods=["PUT"])
+# @require_access(minimum_role="member")
+# async def update_user_profile(user_id: str) -> tuple[Dict[str, Any], int]:
+#     """Update a user's profile by user ID."""
+#     data: Dict[str, Any] = await request.get_json()
+#     requester_id = g.user.get("user_id", "Unknown")
+#     current_app.logger.info(f"User {requester_id} updating profile for user with ID {user_id} using data: {data}")
+#     result: Dict[str, Any] = await account_controller.update_user_profile(user_id, data)
+#     return jsonify(result), result.get("status", 200)
 
 @account_api.route("/validate", methods=["GET"])
 @require_access(minimum_role="unverified")
