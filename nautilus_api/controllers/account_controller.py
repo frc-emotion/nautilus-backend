@@ -97,6 +97,14 @@ async def get_all_users() -> Dict[str, Any]:
 
     return {"users": users, "status": 200}
 
+async def get_user_directory() -> Dict[str, Any]:
+    """Retrieve all users."""
+    users = await account_service.get_user_directory()
+    if not users:
+        return error_response("No users found", 404)
+
+    return {"users": users, "status": 200}
+
 async def get_user_by_id(user_id: int) -> Dict[str, Any]:
     """Retrieve a specific user by their ID."""
     if not (user := await account_service.find_user_by_id(user_id)):
@@ -104,6 +112,21 @@ async def get_user_by_id(user_id: int) -> Dict[str, Any]:
     
     # Remove password field from user
     user.pop("password", None)
+
+    return {"user": user, "status": 200}
+
+async def get_clean_user_by_id(user_id: int) -> Dict[str, Any]:
+    """Retrieve a specific user by their ID."""
+    if not (user := await account_service.find_user_by_id(user_id)):
+        return error_response("User not found", 404)
+    
+    # Remove password field from user
+    user.pop("password", None)
+    user.pop("email", None)
+    user.pop("student_id", None)
+    user.pop("phone", None)
+    user.pop("api_version", None)
+    user.pop("created_at", None)
 
     return {"user": user, "status": 200}
 

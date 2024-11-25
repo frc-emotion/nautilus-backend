@@ -61,6 +61,24 @@ async def get_all_users() -> tuple[Dict[str, Any], int]:
     result: Dict[str, Any] = await account_controller.get_all_users()
     return jsonify(result), result.get("status", 200)
 
+@account_api.route("/users/directory", methods=["GET"])
+@require_access(minimum_role="member")
+async def get_user_directory() -> tuple[Dict[str, Any], int]:
+    """Retrieve all users."""
+    requester_id = g.user.get("user_id", "Unknown")
+    current_app.logger.info(f"User {requester_id} fetching all users")
+    result: Dict[str, Any] = await account_controller.get_user_directory()
+    return jsonify(result), result.get("status", 200)
+
+@account_api.route("/users/directory/<int:user_id>", methods=["GET"])
+@require_access(minimum_role="member")
+async def get_user_directory_by_id(user_id: int) -> tuple[Dict[str, Any], int]:
+    """Retrieve a specific user by their ID."""
+    requester_id = g.user.get("user_id", "Unknown")
+    current_app.logger.info(f"User {requester_id} fetching user with ID {user_id}")
+    result: Dict[str, Any] = await account_controller.get_clean_user_by_id(user_id)
+    return jsonify(result), result.get("status", 200)
+
 @account_api.route("/users/<int:user_id>", methods=["GET"])
 @require_access(specific_roles="admin")
 async def get_user_by_id(user_id: int) -> tuple[Dict[str, Any], int]:

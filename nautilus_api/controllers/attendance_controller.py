@@ -91,6 +91,22 @@ async def get_meeting_by_id(meeting_id: int) -> Dict[str, Union[Dict[str, Any], 
 
     return {"meeting": meeting, "status": 200}
 
+async def get_clean_meeting_by_id(meeting_id: int) -> Dict[str, Union[Dict[str, Any], str, int]]:
+    meeting = await attendance_service.get_meeting_by_id(meeting_id)
+    if not meeting:
+        return format_response("Meeting not found", 404)
+
+    meeting.pop("members_logged", None)
+
+    return {"meeting": meeting, "status": 200}
+
+async def get_all_clean_meetings() -> Dict[str, Union[list, int]]:
+    meetings = await attendance_service.get_all_meetings()
+    for meeting in meetings:
+        meeting.pop("members_logged", None)
+
+    return {"meetings": meetings, "status": 200}
+
 # Function to update a meeting
 async def update_meeting(meeting_id: int, data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
     validated_data = await validate_data(MeetingSchema, data, "Update Meeting")
@@ -105,7 +121,7 @@ async def update_meeting(meeting_id: int, data: Dict[str, Any]) -> Dict[str, Uni
 # Function to delete a meeting
 async def delete_meeting(meeting_id: int) -> Dict[str, Union[str, int]]:
     # We cant actually delete a meeting since that would remove all attendance logs and mess up sequential IDs
-    if not (await attendance_service.hide_meeting(meeting_id)).modified_count:
+    if not (await attendance_service.delete_meeting(meeting_id)).deleted_count:
         return format_response("Meeting not found", 404)
 
     return format_response("Meeting deleted", 200)

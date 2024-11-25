@@ -75,6 +75,23 @@ async def get_all_users() -> list[Dict[str, Any]]:
 
     return allUsers
 
+async def get_user_directory() -> list[Dict[str, Any]]:
+    """Retrieve all users."""
+    account_collection = await get_collection("users")
+
+    allUsers = await account_collection.find().to_list(None)
+
+    # Remove password field from all users
+    for user in allUsers:
+        del user["password"]
+        del user["email"]
+        del user["api_version"]
+        del user["phone"]
+        del user["created_at"]
+        del user["student_id"]
+
+    return allUsers
+
 async def mass_verify_users(user_ids: list[int]) -> UpdateResult:
     """Verify multiple users by setting their role to 'member'."""
     account_collection = await get_collection("users")

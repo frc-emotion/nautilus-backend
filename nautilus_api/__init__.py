@@ -69,6 +69,6 @@ def create_app():
     app.register_blueprint(account_routes.account_api, url_prefix="/api/account")
     app.register_blueprint(auth_routes.auth_api, url_prefix="/api/auth")
     app.register_blueprint(attendance_routes.attendance_api, url_prefix="/api/attendance")
-    app.register_blueprint(meeting_routes.meeting_api, url_prefix="/api/meeting")
+    app.register_blueprint(meeting_routes.meeting_api, url_prefix="/api/meetings")
 
     return app

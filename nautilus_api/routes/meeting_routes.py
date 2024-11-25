@@ -10,6 +10,7 @@ meeting_api = Blueprint('meeting_api', __name__)
 @meeting_api.before_request
 def authenticate_user() -> None:
     """Authenticate user using JWT token in the Authorization header."""
+    print(request.headers)
     auth_header: Optional[str] = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         token: str = auth_header.split(" ")[1]
@@ -79,4 +80,22 @@ async def get_meeting_by_id(meeting_id: str) -> tuple[Dict[str, Any], int]:
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} fetching meeting with ID {meeting_id}")
     result: Dict[str, Any] = await attendance_controller.get_meeting_by_id(meeting_id)
+    return jsonify(result), result.get("status", 200)
+
+@meeting_api.route("/<int:meeting_id>/info", methods=["GET"])
+@require_access(minimum_role="member")
+async def get_clean_meeting_by_id(meeting_id: str) -> tuple[Dict[str, Any], int]:
+    """Retrieve a specific meeting by its ID without sensitive information."""
+    requester_id = g.user.get("user_id", "Unknown")
+    current_app.logger.info(f"User {requester_id} fetching meeting with ID {meeting_id}")
+    result: Dict[str, Any] = await attendance_controller.get_clean_meeting_by_id(meeting_id)
+    return jsonify(result), result.get("status", 200)
+
+@meeting_api.route("/info", methods=["GET"])
+@require_access(minimum_role="member")
+async def get_all_clean_meetings() -> tuple[Dict[str, Any], int]:
+    """Retrieve all meetings without sensitive information."""
+    requester_id = g.user.get("user_id", "Unknown")
+    current_app.logger.info(f"User {requester_id} fetching all meetings")
+    result: Dict[str, Any] = await attendance_controller.get_all_clean_meetings()
     return jsonify(result), result.get("status", 200)

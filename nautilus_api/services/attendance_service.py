@@ -157,7 +157,7 @@ async def get_all_meetings() -> List[Dict[str, Any]]:
 #     user = await get_attendance_by_user_id(user_id)
 #     return any(log["meeting_id"] == meeting_id for log in user.get("logs", [])) if user else False
 
-async def user_already_logged(user_id: str, meeting_id: str) -> bool:
+async def user_already_logged(user_id: int, meeting_id: str) -> bool:
     """Check if a user has already logged attendance for a given meeting."""
     user = await get_attendance_by_user_id(user_id)
     
@@ -169,4 +169,8 @@ async def user_already_logged(user_id: str, meeting_id: str) -> bool:
     meeting = await get_meeting_by_id(meeting_id)
     return user_id in meeting.get("members_logged", []) if meeting else False
 
-    
+async def delete_meeting(meeting_id: int):
+    """Delete a meeting by ID"""
+    meeting_collection = await get_collection("meetings")
+
+    return await meeting_collection.delete_one({"_id": meeting_id})
