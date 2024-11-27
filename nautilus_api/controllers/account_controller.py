@@ -156,6 +156,8 @@ async def refresh_user(user: Dict[str, Any]) -> Dict[str, Any]:
     return {"user": user, "status": 200}
 
 async def update_password(email:str, password:str, token:str):
+        if not account_service.verify_jwt_token(token):
+            return error_response("Invalid JWT token", 400)
         data={
             "password":password
         }
@@ -190,12 +192,26 @@ async def send_forgot_password(email:str):
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-            "https://api.mailgun.net/v3/sandboxd217110138184d5489a5168bdcc7eb37.mailgun.org/messages",
+        "https://api.mailgun.net/v3/sandboxd217110138184d5489a5168bdcc7eb37.mailgun.org/messages",
             auth=("api", os.getenv("MAILGUN_API_KEY")),
-            data={"from": "Excited User <mailgun@sandboxd217110138184d5489a5168bdcc7eb37.mailgun.org>", #mailgun@sandbox.....
-                "to": [email],#,"YOU@sandboxd217110138184d5489a5168bdcc7eb37.mailgun.org"],
-                "subject": "Hello",
-                "text": f"nautilus://forgot-password/{email}/{token}"})
+            data={
+            "from": "FRC Team 2658 <mailgun@sandboxd217110138184d5489a5168bdcc7eb37.mailgun.org>",
+            "to": [email],
+            "subject": "Reset Your Password",
+            "text": f"Open this link to reset your password for the nautlius app: nautilus://forgot-password/{email}/{token}",
+            "html": f"""
+                <html>
+                    <body>
+                        <p>Make sure to close the nautilus app before clicking the links! </p>
+                        <p>Click the link below to reset your password for the nautilus app:</p>
+                        <a href="nautilus://forgot-password/{email}/{token}">Reset Password</a>
+                        <p>If the link doesn't work, copy and paste this URL into your browser:</p>
+                        <p>nautilus://forgot-password/{email}/{token}</p>
+                    </body>
+                </html>
+            """
+        }
+    )
         print(response)
         if response.status_code != 200:
             return {
