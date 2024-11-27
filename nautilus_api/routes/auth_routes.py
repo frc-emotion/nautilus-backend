@@ -45,3 +45,28 @@ async def login():
         current_app.logger.info("User logged in successfully")
 
     return jsonify(result), result.get("status", 200)
+
+@auth_api.route("/forgotPassword", methods=["POST"])
+async def forgotPassword():
+    data = await request.get_json()
+    current_app.logger.info(f"Attempting to send email to user with mail: {data.get('email')}")
+    result = await account_controller.send_forgot_password(data.get('email'))
+    print(result)
+    if "error" in result:
+        current_app.logger.error(f"Failed email sending attempt for user: {data.get('email')}")
+    else:
+        current_app.logger.info("Email sent successfully")
+
+    return jsonify(result), result.get("status", 200)
+
+@auth_api.route("/updatePassword", methods=["POST"])
+async def updatePassword():
+    data=await request.get_json()
+    current_app.logger.info(f"Attempting to update password for user with mail: {data.get('email')}")
+    result=await account_controller.update_password(data.get('email'),data.get('password'),data.get('token'))
+    if "error" in result:
+        current_app.logger.error(f"Failed email sending attempt for user: {data.get('email')}")
+    else:
+        current_app.logger.info("Email sent successfully")
+
+    return jsonify(result), result.get("status", 200)
