@@ -5,8 +5,10 @@ class LoginSchema(BaseModel):
     email: str = Field(..., description="The email address of the user")
     password: str = Field(..., description="The password of the user")
 
-class PasswordSchema(BaseModel):
-    password: str = Field(..., description="Password of the user")  # e.g., passwordfr321
+class ForgotPasswordSchema(BaseModel):
+    email:str=Field(..., description="The email of the user")
+    password: str = Field(..., description="Password of the user")
+    token: str=Field(...,description="JWT token")
 
 class RegisterSchema(BaseModel):
     first_name: str = Field(..., description="First name of the user")  # e.g., Arshan

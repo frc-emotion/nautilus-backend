@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from quart import current_app
 from nautilus_api.config import Config
 from nautilus_api.services import account_service
-from nautilus_api.schemas.auth_schema import RegisterSchema, LoginSchema, UpdateUserSchema, VerifyUsersSchema, PasswordSchema
+from nautilus_api.schemas.auth_schema import RegisterSchema, LoginSchema, UpdateUserSchema, VerifyUsersSchema, ForgotPasswordSchema
 from nautilus_api.schemas.utils import format_validation_error
 from werkzeug.security import generate_password_hash, check_password_hash
 from typing import Any, Dict, List
@@ -155,27 +155,27 @@ async def refresh_user(user: Dict[str, Any]) -> Dict[str, Any]:
 
     return {"user": user, "status": 200}
 
-async def update_password(email:str, password:str, token:str):
-        if not account_service.verify_jwt_token(token):
+async def update_password(data: Dict[str,Any]):
+        validated_data, error = validate_schema(data, ForgotPasswordSchema)
+        if not account_service.verify_jwt_token(validated_data.token):
             return error_response("Invalid JWT token", 400)
-        data={
-            "password":password
-        }
-        validated_data, error = validate_schema(data, PasswordSchema)
 
-        user = await account_service.find_user_by_email(email)
+        validated_data, error = validate_schema(data, ForgotPasswordSchema)
+
+        if error:
+            return error_response(error,400)
+
+        user = await account_service.find_user_by_email(validated_data.email)
         
         if not (len(validated_data.password) >= 8 and any(char.isalpha() for char in validated_data.password) and any(char.isdigit() for char in validated_data.password)):
             return error_response("Password must be at least 8 characters long, contain a letter and a number", 400)
+        
         user_data = validated_data.model_dump(exclude_unset=True)
 
-        user_data.update(
-        {
-            "password": generate_password_hash(validated_data.password),
-            })
+        user_data.update({"password": generate_password_hash(validated_data.password),})
         
-
         user_id= int(user["_id"])
+
         if not (result := await account_service.update_user_profile(user_id, user_data)).modified_count:
             return error_response("Not found or unchanged", 404)
 
@@ -184,71 +184,53 @@ async def update_password(email:str, password:str, token:str):
         
 
 
-async def send_forgot_password(email:str):
+async def send_password_email(email:str):
     user = await account_service.find_user_by_email(email)
-    if user is None:
-        return error_response("Not found or unchanged", 404)
-    token = await account_service.generate_jwt_token(user)
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-        "https://api.mailgun.net/v3/sandboxd217110138184d5489a5168bdcc7eb37.mailgun.org/messages",
-            auth=("api", os.getenv("MAILGUN_API_KEY")),
-            data={
-            "from": "FRC Team 2658 <mailgun@sandboxd217110138184d5489a5168bdcc7eb37.mailgun.org>",
-            "to": [email],
-            "subject": "Reset Your Password",
-            "text": f"Open this link to reset your password for the nautlius app: nautilus://forgot-password/{email}/{token}",
-            "html": f"""
-                <html>
-                    <body>
-                        <p>Make sure to close the nautilus app before clicking the links! </p>
-                        <p>Click the link below to reset your password for the nautilus app:</p>
-                        <a href="nautilus://forgot-password/{email}/{token}">Reset Password</a>
-                        <p>If the link doesn't work, copy and paste this URL into your browser:</p>
-                        <p>nautilus://forgot-password/{email}/{token}</p>
-                    </body>
-                </html>
-            """
-        }
-    )
-        print(response)
-        if response.status_code != 200:
-            return {
-                "success": False,
-                "email": email,
-                "error": f"Failed to send email. Mailgun response: {response.text}",
-                "status": response.status_code,
-            }
 
-        # Return success response
+    if user is None:
+        # return error_response("User does not exist", 404)
+        # we don't want an error being returned so that people can't check which emails have been registered
         return {
             "success": True,
             "email": email,
             "message": "Email sent successfully",
-            "status": response.status_code,
+            "status": 200,
         }
+    
+    token = await account_service.generate_jwt_token(user)
 
-    except Exception as e:
-        # Handle unexpected errors (e.g., network issues)
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+    "https://api.mailgun.net/v3/sandboxd217110138184d5489a5168bdcc7eb37.mailgun.org/messages",
+        auth=("api", os.getenv("MAILGUN_API_KEY")),
+        data={
+        "from": "FRC Team 2658 <mailgun@sandboxd217110138184d5489a5168bdcc7eb37.mailgun.org>",
+        "to": [email],
+        "subject": "Reset Your Password",
+        "text": f"Open this link to reset your password for the nautlius app: nautilus://forgot-password/{email}/{token}",
+        "html": f"""
+            <html>
+                <body>
+                    <p>Make sure to close the nautilus app before clicking the links! </p>
+                    <p>Click the link below to reset your password for the nautilus app:</p>
+                    <a href="nautilus://forgot-password/{email}/{token}">Reset Password</a>
+                    <p>If the link doesn't work, copy and paste this URL into your browser:</p>
+                    <p>nautilus://forgot-password/{email}/{token}</p>
+                </body>
+            </html>
+        """
+    }
+)
+    if response.status_code != 200:
         return {
             "success": False,
             "email": email,
-            "error": f"An exception occurred: {str(e)}",
-            "status": 500,
+            "error": f"Failed to send email. Mailgun response: {response.text}",
+            "status": response.status_code,
         }
-    # try:
-    #     api_key = os.getenv("MAILGUN_API_KEY") # get API-Key from the `.env` file
-
-    #     resp = requests.post(MAILGUN_SERVER_NAME, auth=("api", api_key),
-    #     data={"from": FROM_EMAIL_ADDRESS,
-    #             "to": email, "subject": 'idk', "text": 'get a life'})
-    #     if resp.status_code == 200: # success
-    #         logging.info(f"Successfully sent an email to '{email}' via Mailgun API.")
-    #         return {"email":email, "status":200}
-    #     else: # error
-    #         logging.error(f"Could not send the email, reason: {resp.text}")
-
-    # except Exception as ex:
-    #     logging.exception(f"Mailgun error: {ex}")
-    #     return error_response("idek anymore", 404)
+    return {
+        "success": True,
+        "email": email,
+        "message": "Email sent successfully",
+        "status": response.status_code,
+    }

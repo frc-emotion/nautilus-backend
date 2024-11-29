@@ -25,15 +25,12 @@ def verify_jwt_token(token: str) -> Dict[str, Any]:
             exp_datetime = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
             if exp_datetime < datetime.now(timezone.utc):
                 return None
-                raise KeyError(status_code=401, detail="Token has expired")
 
         return decoded_payload
     except jwt.ExpiredSignatureError:
         return None
-        raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.InvalidTokenError:
         return None
-        raise HTTPException(status_code=401, detail="Invalid token")
 
 async def get_collection(collection_name: str):
     """Helper to retrieve a MongoDB collection from the current app's database."""
