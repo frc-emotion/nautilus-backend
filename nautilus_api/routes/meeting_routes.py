@@ -42,6 +42,7 @@ async def create_meeting() -> tuple[Dict[str, Any], int]:
     data: Dict[str, Any] = await request.get_json()
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} creating a new meeting with data: {data}")
+    data["created_by"] = requester_id
     result: Dict[str, Any] = await attendance_controller.create_meeting(data)
     return jsonify(result), result.get("status", 200)
 

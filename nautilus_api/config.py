@@ -4,8 +4,8 @@ class Config:
     # MongoDB connection URI, defaulting to localhost for development
     MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017")
     
-    # Debug mode enabled if environment variable DEBUG is "true" (case-insensitive)
-    DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
+    # Production flag
+    PRODUCTION: bool = os.getenv("PRODUCTION", "False").lower() == "true"
     
     # Secret key for JWT encoding/decoding
     JWT_SECRET: str = os.getenv("JWT_SECRET", "")

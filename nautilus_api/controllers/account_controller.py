@@ -1,24 +1,13 @@
 from datetime import datetime, timezone
 from quart import current_app
 from nautilus_api.config import Config
+from nautilus_api.controllers.utils import error_response, success_response, validate_schema
 from nautilus_api.services import account_service
 from nautilus_api.schemas.auth_schema import RegisterSchema, LoginSchema, UpdateUserSchema, VerifyUsersSchema
 from nautilus_api.schemas.utils import format_validation_error
 from werkzeug.security import generate_password_hash, check_password_hash
 from typing import Any, Dict, List
 from pydantic import ValidationError
-
-def error_response(message: str, status: int) -> Dict[str, Any]:
-    """Returns a standardized error response."""
-    current_app.logger.error(message)
-    return {"error": message, "status": status}
-
-def validate_schema(data: Dict[str, Any], schema):
-    """Validate data against a schema and return error message if validation fails."""
-    try:
-        return schema(**data), None
-    except ValidationError as e:
-        return None, format_validation_error(e)
 
 async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
     """Register a new user with validated data."""
@@ -48,7 +37,7 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
     if not (result := await account_service.add_new_user(user_data)).inserted_id:
         return error_response("Error creating account. Please try again later!", 500)
 
-    return {"message": "User registered successfully", "status": 201}
+    return success_response("User registered successfully", 201)
 
 async def login_user(data: Dict[str, Any]) -> Dict[str, Any]:
     """Authenticate a user and generate a JWT token."""
@@ -68,7 +57,7 @@ async def login_user(data: Dict[str, Any]) -> Dict[str, Any]:
     # Return token and user data
     user.update({"token": token})
 
-    return {"user": user, "status": 200}
+    return success_response("User logged in", 200, {"user": user})
 
 async def update_user(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
     """Update user data by user ID."""
@@ -79,15 +68,26 @@ async def update_user(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
     result = await account_service.update_user(user_id, data)
     if not result.modified_count:
         return error_response("Not found or unchanged", 404)
+    
+    if not (user := await account_service.find_user_by_id(user_id)):
+        return error_response("User not found", 404)
+    
+    # Remove password field from user
+    user.pop("password", None)
+    user.pop("email", None)
+    user.pop("student_id", None)
+    user.pop("phone", None)
+    user.pop("api_version", None)
+    user.pop("created_at", None)
 
-    return {"message": "User updated", "status": 200}
+    return success_response("User updated", 200, {"user": user})
 
 async def delete_user(user_id: int) -> Dict[str, Any]:
     """Delete a user by user ID."""
     if not (result := await account_service.delete_user(user_id)).deleted_count:
         return error_response("User not found", 404)
 
-    return {"message": "User deleted", "status": 200}
+    return success_response("User deleted", 200)
 
 async def get_all_users() -> Dict[str, Any]:
     """Retrieve all users."""
@@ -95,7 +95,7 @@ async def get_all_users() -> Dict[str, Any]:
     if not users:
         return error_response("No users found", 404)
 
-    return {"users": users, "status": 200}
+    return success_response("Users retrieved", 200, {"users": users})
 
 async def get_user_directory() -> Dict[str, Any]:
     """Retrieve all users."""
@@ -103,7 +103,7 @@ async def get_user_directory() -> Dict[str, Any]:
     if not users:
         return error_response("No users found", 404)
 
-    return {"users": users, "status": 200}
+    return success_response("Users retrieved", 200, {"users": users})
 
 async def get_user_by_id(user_id: int) -> Dict[str, Any]:
     """Retrieve a specific user by their ID."""
@@ -113,7 +113,7 @@ async def get_user_by_id(user_id: int) -> Dict[str, Any]:
     # Remove password field from user
     user.pop("password", None)
 
-    return {"user": user, "status": 200}
+    return success_response("User retrieved", 200, {"user": user})
 
 async def get_clean_user_by_id(user_id: int) -> Dict[str, Any]:
     """Retrieve a specific user by their ID."""
@@ -128,7 +128,7 @@ async def get_clean_user_by_id(user_id: int) -> Dict[str, Any]:
     user.pop("api_version", None)
     user.pop("created_at", None)
 
-    return {"user": user, "status": 200}
+    return success_response("User retrieved", 200, {"user": user})
 
 async def mass_verify_users(data: Dict[str, any]) -> Dict[str, Any]:
     """Mass verify user's based on ID"""
@@ -139,15 +139,14 @@ async def mass_verify_users(data: Dict[str, any]) -> Dict[str, Any]:
     if not (verified := await account_service.mass_verify_users(data["users"])).modified_count:
         return error_response("Not found or unchanged", 404)
 
-    return {"message": "User profile updated", "status": 200}
-
+    return success_response("Users verified", 200)
 
 async def update_user_profile(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
     """Update a user's profile by user ID."""
     if not (result := await account_service.update_user_profile(user_id, data)).modified_count:
         return error_response("Not found or unchanged", 404)
 
-    return {"message": "User profile updated", "status": 200}
+    return success_response("User profile updated", 200)
 
 async def refresh_user(user: Dict[str, Any]) -> Dict[str, Any]:
     """Generate a JWT token for a user."""
@@ -165,4 +164,4 @@ async def refresh_user(user: Dict[str, Any]) -> Dict[str, Any]:
     # Return token and user data
     user.update({"token": token})
 
-    return {"user": user, "status": 200}
+    return success_response("User refreshed", 200, {"user": user})
