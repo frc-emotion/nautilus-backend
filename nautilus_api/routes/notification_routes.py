@@ -62,3 +62,13 @@ async def update_notification_token() -> tuple[Dict[str, Any], int]:
     current_app.logger.info(f"User {user_id} updating notification token with data: {data}")
     result: Dict[str, Any] = await notification_controller.update_notification_token(user_id, data)
     return jsonify(result), result.get("status", 200)
+
+# Check if authenticated user has a notification token set
+@notification_api.route("/", methods=["GET"])
+@require_access(minimum_role="member")
+async def check_notification_token() -> tuple[Dict[str, Any], int]:
+    """Check if user has a notification token."""
+    user_id = g.user.get("user_id", "Unknown")
+    current_app.logger.info(f"User {user_id} checking notification token")
+    result: Dict[str, Any] = await notification_controller.check_notification_token(user_id)
+    return jsonify(result), result.get("status", 200)

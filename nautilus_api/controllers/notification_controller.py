@@ -110,3 +110,12 @@ async def trigger_mass_notification(data: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as exc:
         return error_response(f"Failed to send notifications: {str(exc)}", 500)
     
+async def check_notification_token(user_id: int) -> Dict[str, Any]:
+    """Check if user has a notification token."""
+    if not (user := await notification_service.find_user_by_id(user_id)):
+        return error_response("User not found", 404)
+
+    if not user.get("notification_token"):
+        return error_response("No notification token set", 404)
+
+    return success_response("Notification token found", 200, {"token": user.get("notification_token")})

@@ -1,4 +1,5 @@
 
+from typing import Any, Dict, Optional
 from quart import current_app
 from pymongo.results import UpdateResult, DeleteResult, InsertOneResult
 
@@ -25,3 +26,7 @@ async def delete_notification_token(user_id: int) -> UpdateResult:
         {"$unset": {"notification_token": ""}}
    )
 
+async def find_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
+    """Retrieve user by ID."""
+    account_collection = await get_collection("users")
+    return await account_collection.find_one({"_id": user_id})
