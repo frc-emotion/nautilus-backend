@@ -49,6 +49,15 @@ logger.addHandler(queue_handler)
 listener = QueueListener(log_queue, console_handler, file_handler)
 listener.start()
 
+# Load version info from 'version.json'
+def load_version_info():
+    try:
+        with open("version.json", "r") as f:
+            version_info = f.read()
+        return version_info
+    except Exception as e:
+        return {"error": str(e)}
+    
 def create_app():
     global mongo_client
 
@@ -64,6 +73,17 @@ def create_app():
     # Set the logger for the app
     app.logger = logger
     app.logger_listener = listener
+
+    # Load version info
+    app.version_info = load_version_info()
+
+    @app.route("/version")
+    async def version():
+        return app.version_info
+    
+    @app.route("/")
+    async def home():
+        return "greetings curious one"
 
     # Register API routes
     app.register_blueprint(account_routes.account_api, url_prefix="/api/account")
