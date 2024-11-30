@@ -89,6 +89,7 @@ async def get_user_directory() -> list[Dict[str, Any]]:
         del user["phone"]
         del user["created_at"]
         del user["student_id"]
+        del user["notification_token"]
 
     return allUsers
 

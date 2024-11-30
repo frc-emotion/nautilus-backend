@@ -3,20 +3,12 @@ from quart import current_app
 from typing import Any, Dict, Union
 from nautilus_api.config import Config
 from nautilus_api.controllers.account_controller import error_response, success_response
+from nautilus_api.controllers.utils import validate_data
 import nautilus_api.services.attendance_service as attendance_service
 from nautilus_api.schemas.attendance_schema import ManualAttendanceLogSchema, MeetingSchema, AttendanceLogSchema, AttendanceUserSchema, RemoveAttendanceLogSchema, RemoveManualAttendanceSchema
 from nautilus_api.schemas.utils import format_validation_error
 
 # Helper function for data validation
-async def validate_data(schema, data: Dict[str, Any], action: str) -> Union[Any, Dict[str, Union[str, int]]]:
-    """Validates data against a schema, logging errors if validation fails."""
-    try:
-        validated_data = schema(**data)
-        current_app.logger.info(f"{action} data validated: {validated_data}")
-        return validated_data
-    except ValidationError as e:
-        current_app.logger.error(f"Validation error in {action}: {e.errors()}")
-        return error_response(format_validation_error(e), 400)
 
 # Attendance logging function
 async def log_attendance(data: Dict[str, Any], user_id: int) -> Dict[str, Union[str, int]]:
@@ -73,7 +65,7 @@ async def modify_attendance(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
 # Function to create a meeting
 async def create_meeting(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
     validated_data = await validate_data(MeetingSchema, data, "Create Meeting")
-    print(validated_data)
+    
     if isinstance(validated_data, dict): return validated_data  # Return error if validation failed
 
     validated_data = validated_data.model_dump(exclude_unset=True)

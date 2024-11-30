@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Union
 from pydantic import ValidationError
 from quart import current_app
 
@@ -15,9 +15,13 @@ def success_response(message: str, status: int, additional_data: Dict = {}) -> D
     current_app.logger.info(message)
     return {"message": message, "status": status, "data": additional_data}
 
-def validate_schema(data: Dict[str, Any], schema):
-    """Validate data against a schema and return error message if validation fails."""
+    
+async def validate_data(schema, data: Dict[str, Any], action: str) -> Union[Any, Dict[str, Union[str, int]]]:
+    """Validates data against a schema, logging errors if validation fails."""
     try:
-        return schema(**data), None
+        validated_data = schema(**data)
+        current_app.logger.info(f"{action} data validated: {validated_data}")
+        return validated_data
     except ValidationError as e:
-        return None, format_validation_error(e)
+        current_app.logger.error(f"Validation error in {action}: {e.errors()}")
+        return error_response(format_validation_error(e), 400)

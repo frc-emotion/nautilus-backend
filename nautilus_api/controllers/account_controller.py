@@ -1,17 +1,14 @@
 from datetime import datetime, timezone
-from quart import current_app
 from nautilus_api.config import Config
-from nautilus_api.controllers.utils import error_response, success_response, validate_schema
+from nautilus_api.controllers.utils import error_response, success_response, validate_data
 from nautilus_api.services import account_service
 from nautilus_api.schemas.auth_schema import RegisterSchema, LoginSchema, UpdateUserSchema, VerifyUsersSchema
-from nautilus_api.schemas.utils import format_validation_error
 from werkzeug.security import generate_password_hash, check_password_hash
-from typing import Any, Dict, List
-from pydantic import ValidationError
+from typing import Any, Dict
 
 async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
     """Register a new user with validated data."""
-    validated_data, error = validate_schema(data, RegisterSchema)
+    validated_data, error = validate_data(RegisterSchema, data)
     if error:
         return error_response(error, 400)
     
@@ -41,7 +38,7 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
 
 async def login_user(data: Dict[str, Any]) -> Dict[str, Any]:
     """Authenticate a user and generate a JWT token."""
-    validated_data, error = validate_schema(data, LoginSchema)
+    validated_data, error = RegisterSchema(LoginSchema, data)
     if error:
         return error_response(error, 400)
     
@@ -61,7 +58,7 @@ async def login_user(data: Dict[str, Any]) -> Dict[str, Any]:
 
 async def update_user(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
     """Update user data by user ID."""
-    validated_data, error = validate_schema(data, UpdateUserSchema)
+    validated_data, error = validate_data(UpdateUserSchema, data)
     if error:
         return error_response(error, 400)
     
@@ -132,7 +129,7 @@ async def get_clean_user_by_id(user_id: int) -> Dict[str, Any]:
 
 async def mass_verify_users(data: Dict[str, any]) -> Dict[str, Any]:
     """Mass verify user's based on ID"""
-    validated_data, error = validate_schema(data, VerifyUsersSchema)
+    validated_data, error = validate_data(VerifyUsersSchema, data)
     if error:
         return error_response(error, 400)
     

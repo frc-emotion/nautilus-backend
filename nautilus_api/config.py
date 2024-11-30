@@ -6,6 +6,9 @@ class Config:
     
     # Production flag
     PRODUCTION: bool = os.getenv("PRODUCTION", "False").lower() == "true"
+
+    # Expo push token
+    EXPO_TOKEN: str = os.getenv("EXPO_TOKEN", "")
     
     # Secret key for JWT encoding/decoding
     JWT_SECRET: str = os.getenv("JWT_SECRET", "")
