@@ -100,3 +100,21 @@ async def mass_verify_users(user_ids: list[int]) -> UpdateResult:
         {"_id": {"$in": user_ids}},
         {"$set": {"role": "member"}}
     )
+
+def verify_jwt_token(token: str) -> Dict[str, Any]:
+    try:
+        # Decode the token with the secret and algorithm used for encoding
+        decoded_payload = jwt.decode(token, Config.JWT_SECRET, algorithms=["HS256"])
+
+        # Optionally, check expiration manually (since decode() doesn't automatically raise an exception on expiry)
+        exp_timestamp = decoded_payload.get("exp")
+        if exp_timestamp:
+            exp_datetime = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
+            if exp_datetime < datetime.now(timezone.utc):
+                return None
+
+        return decoded_payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None

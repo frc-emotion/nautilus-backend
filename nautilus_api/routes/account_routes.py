@@ -120,3 +120,4 @@ async def validate_token() -> tuple[Dict[str, Any], int]:
     result = await account_controller.refresh_user(g.user)
 
     return jsonify(result), 200
+

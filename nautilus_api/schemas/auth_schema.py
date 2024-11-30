@@ -48,3 +48,8 @@ class UpdateUserSchema(BaseModel):
 
 class VerifyUsersSchema(BaseModel):
     users: List[int] = Field(..., description="List of user IDs to verify")
+
+class ForgotPasswordSchema(BaseModel):
+    email:str=Field(..., description="The email of the user")
+    password: str = Field(..., description="Password of the user")
+    token: str=Field(...,description="JWT token")

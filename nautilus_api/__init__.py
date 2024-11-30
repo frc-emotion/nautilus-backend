@@ -50,15 +50,17 @@ def create_app():
     mongo_client = AsyncIOMotorClient(Config.MONGO_URI)
     app.db = mongo_client[Config.DB_NAME]
 
-    async_client = httpx.AsyncClient(
+    async_expo_client = httpx.AsyncClient(
         headers={
             "Authorization": f"Bearer {Config.EXPO_TOKEN}",
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
     )
+    
+    app.http_client = httpx.AsyncClient()
 
-    push_client = AsyncPushClient(session=async_client)
+    push_client = AsyncPushClient(session=async_expo_client)
     app.push_client = push_client
 
     # Set the logger for the app

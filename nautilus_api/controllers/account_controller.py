@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
+
+from quart import current_app
 from nautilus_api.config import Config
 from nautilus_api.controllers.utils import error_response, success_response, validate_data
 from nautilus_api.services import account_service
-from nautilus_api.schemas.auth_schema import RegisterSchema, LoginSchema, UpdateUserSchema, VerifyUsersSchema
+from nautilus_api.schemas.auth_schema import ForgotPasswordSchema, RegisterSchema, LoginSchema, UpdateUserSchema, VerifyUsersSchema
 from werkzeug.security import generate_password_hash, check_password_hash
 from typing import Any, Dict
 
@@ -162,3 +164,71 @@ async def refresh_user(user: Dict[str, Any]) -> Dict[str, Any]:
     user.update({"token": token})
 
     return success_response("User refreshed", 200, {"user": user})
+
+async def update_password(data: Dict[str,Any]):
+        validated_data, error = validate_data(data, ForgotPasswordSchema)
+        if not account_service.verify_jwt_token(validated_data.token):
+            return error_response("Invalid JWT token", 400)
+
+        if error:
+            return error_response(error,400)
+
+        user = await account_service.find_user_by_email(validated_data.email)
+
+        if not (len(validated_data.password) >= 8 and any(char.isalpha() for char in validated_data.password) and any(char.isdigit() for char in validated_data.password)):
+            return error_response("Password must be at least 8 characters long, contain a letter and a number", 400)
+
+        user_data = validated_data.model_dump(exclude_unset=True)
+
+        user_data.update({"password": generate_password_hash(validated_data.password),})
+
+        user_id= int(user["_id"])
+
+        if not (result := await account_service.update_user_profile(user_id, user_data)).modified_count:
+            return error_response("Not found or unchanged", 404)
+
+        return {"message": "User password updated", "status": 200}
+
+
+
+
+async def send_password_email(email:str):
+    user = await account_service.find_user_by_email(email)
+
+    if user is None:
+
+        # we don't want an error being returned so that people can't check which emails have been registered
+        return {
+            "success": True,
+            "email": email,
+            "message": "Email may have been successfully",
+            "status": 200,
+        }
+
+    token = await account_service.generate_jwt_token(user)
+
+    response = await current_app.http_client.post(
+    Config.MAILGUN_ENDPOINT,
+        auth=("api", Config.MAILGUN_API_KEY),
+        data={
+        "from": Config.MAILGUN_FROM_EMAIL,
+        "to": [email],
+        "subject": "Reset Your Password",
+        "text": f"Open this link to reset your password for the nautlius app: nautilus://forgot-password/{email}/{token}",
+        "html": f"""
+            <html>
+                <body>
+                    <p>Make sure to close the Nautilus app before clicking the links! </p>
+                    <p>Click the link below to reset your password for the nautilus app:</p>
+                    <a href="nautilus://forgot-password/{email}/{token}">Reset Password</a>
+                    <p>If the link doesn't work, copy and paste this URL into your browser:</p>
+                    <p>nautilus://forgot-password/{email}/{token}</p>
+                </body>
+            </html>
+        """
+    }
+)
+    if response.status_code != 200:
+        return error_response(f"Failed to send email. Mailgun response: {response.text}", response.status_code)
+
+    return success_response("Email may have been successfully", 200)

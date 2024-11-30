@@ -36,3 +36,11 @@ class Config:
     }
 
     ROLE_HIERARCHY = ["unverified", "member", "leadership", "executive", "advisor", "admin"]
+
+    MAILGUN_API_KEY: str = os.getenv("MAILGUN_API_KEY", "")
+
+    MAILGUN_ENDPOINT: str = os.getenv("MAILGUN_ENDPOINT", "")
+
+    MAILGUN_FROM_EMAIL: str = os.getenv("MAILGUN_FROM_EMAIL", "")
+
+    
