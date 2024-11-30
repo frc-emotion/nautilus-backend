@@ -34,7 +34,7 @@ async def handle_exception(e: Exception) -> Any:
     return jsonify({"error": "An unexpected error occurred. Please report this immediately!"}), 500
 
 @account_api.route("/users/<int:user_id>", methods=["PUT"])
-@require_access(specific_roles="admin")
+@require_access(specific_roles=["admin"])
 async def update_user(user_id: str) -> tuple[Dict[str, Any], int]:
     """Update user data by user ID."""
     data: Dict[str, Any] = await request.get_json()
@@ -44,7 +44,7 @@ async def update_user(user_id: str) -> tuple[Dict[str, Any], int]:
     return jsonify(result), result.get("status", 200)
 
 @account_api.route("/users/<int:user_id>", methods=["DELETE"])
-@require_access(specific_roles="admin")
+@require_access(specific_roles=["admin"])
 async def delete_user(user_id: str) -> tuple[Dict[str, Any], int]:
     """Delete a user by user ID."""
     requester_id = g.user.get("user_id", "Unknown")
@@ -53,7 +53,7 @@ async def delete_user(user_id: str) -> tuple[Dict[str, Any], int]:
     return jsonify(result), result.get("status", 200)
 
 @account_api.route("/users", methods=["GET"])
-@require_access(specific_roles="admin")
+@require_access(specific_roles=["admin"])
 async def get_all_users() -> tuple[Dict[str, Any], int]:
     """Retrieve all users."""
     requester_id = g.user.get("user_id", "Unknown")
@@ -80,7 +80,7 @@ async def get_user_directory_by_id(user_id: int) -> tuple[Dict[str, Any], int]:
     return jsonify(result), result.get("status", 200)
 
 @account_api.route("/users/<int:user_id>", methods=["GET"])
-@require_access(specific_roles="admin")
+@require_access(specific_roles=["admin"])
 async def get_user_by_id(user_id: int) -> tuple[Dict[str, Any], int]:
     """Retrieve a specific user by their ID."""
     requester_id = g.user.get("user_id", "Unknown")

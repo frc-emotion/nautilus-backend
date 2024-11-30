@@ -1,9 +1,10 @@
 from pydantic import ValidationError
 from quart import current_app
 from typing import Any, Dict, Union
+from nautilus_api.config import Config
 from nautilus_api.controllers.account_controller import error_response, success_response
 import nautilus_api.services.attendance_service as attendance_service
-from nautilus_api.schemas.attendance_schema import MeetingSchema, AttendanceLogSchema, AttendanceUserSchema, RemoveAttendanceLogSchema
+from nautilus_api.schemas.attendance_schema import ManualAttendanceLogSchema, MeetingSchema, AttendanceLogSchema, AttendanceUserSchema, RemoveAttendanceLogSchema, RemoveManualAttendanceSchema
 from nautilus_api.schemas.utils import format_validation_error
 
 # Helper function for data validation
@@ -72,9 +73,19 @@ async def modify_attendance(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
 # Function to create a meeting
 async def create_meeting(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
     validated_data = await validate_data(MeetingSchema, data, "Create Meeting")
+    print(validated_data)
     if isinstance(validated_data, dict): return validated_data  # Return error if validation failed
 
-    if not await attendance_service.create_meeting(validated_data.model_dump(exclude_unset=True)):
+    validated_data = validated_data.model_dump(exclude_unset=True)
+
+    # Check if meeting start and end times are within the term
+    if validated_data["year"] not in Config.SCHOOL_YEAR:
+        return error_response("Invalid year", 400)
+    
+    if Config.SCHOOL_YEAR[validated_data["year"]][validated_data["term"]]["start"] > validated_data["time_start"] or Config.SCHOOL_YEAR[validated_data["year"]][validated_data["term"]]["end"] < validated_data["time_end"]:
+        return error_response("Meeting out of term", 400)
+
+    if not await attendance_service.create_meeting(validated_data):
         return error_response("Create meeting failed", 500)
 
     return success_response("Meeting created", 201)
@@ -135,3 +146,22 @@ async def get_attendance_by_user_id(user_id: int) -> Dict[str, Union[str, int]]:
         return error_response("User not found", 404)
     
     return success_response("Attendance retrieved", 200, {"attendance": user})
+
+async def get_all_attendance() -> Dict[str, Union[list, int]]:
+    attendance = await attendance_service.get_all_attendance()
+    
+    return success_response("Attendance retrieved", 200, {"attendance": attendance})
+
+async def add_manual_attendance(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
+    validated_data = await validate_data(ManualAttendanceLogSchema, data, "Add Manual Attendance")
+    if isinstance(validated_data, dict): return validated_data  # Return error if validation failed
+
+    user_id = validated_data.user_id
+    attendance_log = validated_data.attendanceLog    
+
+    # Add manual attendance log via service
+    success = await attendance_service.add_manual_attendance_log(user_id, attendance_log.model_dump())
+    if not success:
+        return error_response("Failed to add manual attendance log", 500)
+
+    return success_response("Manual attendance log added", 201)

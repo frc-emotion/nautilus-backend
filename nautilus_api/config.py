@@ -18,3 +18,18 @@ class Config:
     
     # JWT expiry duration in days
     JWT_EXPIRY_DAYS: int = int(os.getenv("JWT_EXPIRY_DAYS", "3"))
+
+    SCHOOL_YEAR = {
+        "2024-2025": { # Year that school starts
+            1: { # Term 1
+                "start": 1724223601,
+                "end": 1737360001,
+            },
+            2: { # Term 2
+                "start": 1737360001,
+                "end": 1749711601,
+            },
+        }
+    }
+
+    ROLE_HIERARCHY = ["unverified", "member", "leadership", "executive", "advisor", "admin"]

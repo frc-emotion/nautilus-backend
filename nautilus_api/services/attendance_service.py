@@ -12,12 +12,28 @@ async def get_attendance_by_user_id(user_id: int) -> Optional[Dict[str, Any]]:
     attendance_collection = await get_collection("attendance")
     return await attendance_collection.find_one({"_id": user_id})
 
+async def get_all_attendance() -> List[Dict[str, Any]]:
+    """Retrieve all attendance documents from the database."""
+    attendance_collection = await get_collection("attendance")
+    return await attendance_collection.find().to_list(length=None)
+
 async def get_hours_by_user_id(user_id: int) -> int:
     """Calculate total hours of attendance for a specific user by summing log hours."""
     user = await get_attendance_by_user_id(user_id)
+    # if not user:
+    #     return 0
+    # return sum(log["hours"] for log in user.get("logs", []))
+
+    # Need to account for hours based on term and year. Return hours for each year and term
+
     if not user:
-        return 0
-    return sum(log["hours"] for log in user.get("logs", []))
+        return {}
+
+    hours = {}
+    for log in user.get("logs", []):
+        key = f"{log['year']}_{log['term']}"
+        hours[key] = hours.get(key, 0) + log["hours"]
+    return hours
 
 async def log_attendance(data: Dict[str, Any], user_id: int) -> Union[UpdateResult, InsertOneResult]:
     """
@@ -37,6 +53,8 @@ async def log_attendance(data: Dict[str, Any], user_id: int) -> Union[UpdateResu
         "time_received": data["time_received"],
         "flag": data["flag"],
         "hours": meeting["hours"],
+        "term": meeting["term"],
+        "year": meeting["year"]
     }
 
     if user:
@@ -128,6 +146,8 @@ async def create_meeting(data: Dict[str, Any]) -> InsertOneResult:
         "hours": data["hours"],
         "created_at": datetime.now(timezone.utc),
         "members_logged": [],
+        "term": data["term"],
+        "year": data["year"],
         "_id": meeting_id
     }
     return await meeting_collection.insert_one(new_meeting)
@@ -174,3 +194,36 @@ async def delete_meeting(meeting_id: int):
     meeting_collection = await get_collection("meetings")
 
     return await meeting_collection.delete_one({"_id": meeting_id})
+
+async def add_manual_attendance_log(user_id: int, log_data: Dict[str, Any]) -> bool:
+    attendance_collection = await get_collection("attendance")
+    # Append the new log to the user's logs
+    result = await attendance_collection.update_one(
+        {"_id": user_id},
+        {"$push": {"logs": log_data}},
+        upsert=True
+    )
+    return result.modified_count > 0
+
+async def remove_manual_attendance_logs(user_id: int, hours: float, term: int, year: str) -> bool:
+    attendance_collection = await get_collection("attendance")
+    user = await get_attendance_by_user_id(user_id)
+    if user:
+        logs = user.get("logs", [])
+        hours_to_remove = hours
+        new_logs = []
+        for log in logs:
+            if log["term"] == term and log["year"] == year and hours_to_remove > 0:
+                if log["hours"] <= hours_to_remove:
+                    hours_to_remove -= log["hours"]
+                    continue  # Skip this log
+                else:
+                    log["hours"] -= hours_to_remove
+                    hours_to_remove = 0
+            new_logs.append(log)
+        result = await attendance_collection.update_one(
+            {"_id": user_id},
+            {"$set": {"logs": new_logs}}
+        )
+        return result.modified_count > 0
+    return False

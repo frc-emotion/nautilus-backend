@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Callable, List, Optional, Union
 from quart import current_app, g, jsonify
-from nautilus_api.permissions import ROLE_HIERARCHY
+from nautilus_api.config import Config
 
 def require_access(minimum_role: Optional[str] = None, specific_roles: Optional[List[str]] = None) -> Callable:
     """
@@ -38,8 +38,8 @@ def require_access(minimum_role: Optional[str] = None, specific_roles: Optional[
             elif minimum_role:
                 try:
                     # Get indices of user role and minimum role in ROLE_HIERARCHY to compare hierarchy levels
-                    user_role_index = ROLE_HIERARCHY.index(user_role)
-                    minimum_role_index = ROLE_HIERARCHY.index(minimum_role)
+                    user_role_index = Config.ROLE_HIERARCHY.index(user_role)
+                    minimum_role_index = Config.ROLE_HIERARCHY.index(minimum_role)
                 except ValueError:
                     current_app.logger.warning(
                         f"Invalid role encountered: {user_role} or {minimum_role} not found in ROLE_HIERARCHY."

@@ -54,7 +54,7 @@ async def remove_attendance() -> tuple[Dict[str, Any], int]:
     return jsonify(result), result.get("status", 200)
 
 @attendance_api.route("/modify", methods=["PUT"])
-@require_access(specific_roles="advisor")
+@require_access(specific_roles=["advisor"])
 async def modify_attendance() -> tuple[Dict[str, Any], int]:
     """Modify attendance records based on provided data."""
     data: Dict[str, Any] = await request.get_json()
@@ -69,7 +69,7 @@ async def modify_attendance() -> tuple[Dict[str, Any], int]:
 async def log_attendance() -> Any:
     """Log attendance data for the authenticated user."""
     data: Dict[str, Any] = await request.get_json()
-    user_id: Optional[str] = g.user.get("user_id")
+    user_id: Optional[int] = g.user.get("user_id")
     current_app.logger.info(f"User {user_id} logging attendance with data: {data}")
     
     result: Dict[str, Any] = await attendance_controller.log_attendance(data, user_id)
@@ -79,7 +79,7 @@ async def log_attendance() -> Any:
 @require_access(minimum_role="member")
 async def get_attendance_hours() -> Any:
     """Retrieve total attendance hours for the authenticated user."""
-    user_id: Optional[str] = g.user.get("user_id")
+    user_id: Optional[int] = g.user.get("user_id")
     current_app.logger.info(f"Fetching total hours for user {user_id}")
     
     result: Dict[str, Any] = await attendance_controller.get_attendance_hours(user_id)
@@ -89,8 +89,36 @@ async def get_attendance_hours() -> Any:
 @require_access(minimum_role="member")
 async def get_attendance_logs() -> Any:
     """Retrieve attendance logs for the authenticated user."""
-    user_id: Optional[str] = g.user.get("user_id")
+    user_id: Optional[int] = g.user.get("user_id")
     current_app.logger.info(f"Fetching attendance logs for user {user_id}")
     
     result: Dict[str, Any] = await attendance_controller.get_attendance_by_user_id(user_id)
+    return jsonify(result), result.get("status", 200)
+
+@attendance_api.route("/all", methods=["GET"])
+@require_access(specific_roles=["advisor", "executive", "admin"])
+async def get_all_attendance() -> Any:
+    """Retrieve attendance hours per term and year for all users."""
+    requester_id = g.user.get("user_id", "Unknown")
+    current_app.logger.info(f"User {requester_id} fetching all users attendance hours")
+
+    result: Dict[str, Any] = await attendance_controller.get_all_attendance()
+    return jsonify(result), result.get("status", 200)
+
+@attendance_api.route("/years", methods=["GET"])
+@require_access(minimum_role="member")
+async def get_attendance_years() -> Any:
+    """Retrieve all years with attendance logs for the authenticated user."""
+    user_id: Optional[int] = g.user.get("user_id")
+    current_app.logger.info(f"Fetching attendance years for user {user_id}")
+    
+    result: Dict[str, Any] = Config.SCHOOL_YEAR
+    return jsonify(result), result.get("status", 200)
+
+
+@attendance_api.route("/manual/add", methods=["POST"])
+@require_access(specific_roles=["admin", "advisor"])
+async def add_manual_attendance():
+    data = await request.get_json()
+    result = await attendance_controller.add_manual_attendance(data)
     return jsonify(result), result.get("status", 200)

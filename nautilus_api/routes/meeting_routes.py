@@ -10,7 +10,6 @@ meeting_api = Blueprint('meeting_api', __name__)
 @meeting_api.before_request
 def authenticate_user() -> None:
     """Authenticate user using JWT token in the Authorization header."""
-    print(request.headers)
     auth_header: Optional[str] = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         token: str = auth_header.split(" ")[1]

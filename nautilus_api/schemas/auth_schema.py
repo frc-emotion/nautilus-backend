@@ -47,4 +47,4 @@ class UpdateUserSchema(BaseModel):
     grade: Literal["9", "10", "11", "12", "N/A"] = Field(None, description="Grade level or 'N/A' if not applicable")
 
 class VerifyUsersSchema(BaseModel):
-    users: List[int] = Field(None, description="List of user IDs to verify")
+    users: List[int] = Field(..., description="List of user IDs to verify")
