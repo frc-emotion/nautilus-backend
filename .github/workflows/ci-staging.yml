@@ -39,7 +39,7 @@ jobs:
             - name: Connect to server and trigger redeploy of docker containers
               uses: appleboy/ssh-action@v1.0.0
               with:
-                  host: "team2658.org"
+                  host: "staging.team2658.org"
                   username: "root"
                   key: ${{ secrets.staging }}
                   port: 22
