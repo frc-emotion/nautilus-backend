@@ -45,7 +45,7 @@ jobs:
                   port: 22
                   script: |
                       docker logout ghcr.io
-                      docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.SSH_KEY }}
+                      docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
                       docker pull ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
                       docker stop nautilus-backend
                       docker rm nautilus-backend
