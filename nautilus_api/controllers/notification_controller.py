@@ -35,7 +35,7 @@ async def trigger_notification(data: Dict[str, Any]) -> Dict[str, Any]:
     validated_data, error = validate_data(data, TriggerNotificationSchema)
 
     if error:
-        return error_response(error, 400)
+        return validated_data
 
     if not (user := await notification_service.find_user_by_id(data["user_id"])):
         return error_response("User not found", 404)
@@ -70,7 +70,7 @@ async def trigger_mass_notification(data: Dict[str, Any]) -> Dict[str, Any]:
     validated_data, error = validate_data(data, TriggerNotificationSchema)
 
     if error:
-        return error_response(error, 400)
+        return validated_data
 
     users = await notification_service.get_all_notification_tokens()
 

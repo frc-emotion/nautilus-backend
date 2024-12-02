@@ -11,9 +11,10 @@ from typing import Any, Dict
 async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
     """Register a new user with validated data."""
     validated_data, error = validate_data(RegisterSchema, data)
-    if error:
-        return error_response(error, 400)
     
+    if error:
+        return validated_data
+
     if await account_service.find_user_by_email(validated_data.email):
         return error_response("Email already taken", 409)
     
@@ -29,7 +30,8 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
             "api_version": Config.API_VERSION, 
             "role": "unverified", 
             "password": generate_password_hash(validated_data.password),
-            "created_at": datetime.now(timezone.utc).timestamp()    
+            "created_at": datetime.now(timezone.utc).timestamp(),
+            "notification_token": ""
             })
 
 
@@ -40,10 +42,11 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
 
 async def login_user(data: Dict[str, Any]) -> Dict[str, Any]:
     """Authenticate a user and generate a JWT token."""
-    validated_data, error = RegisterSchema(LoginSchema, data)
-    if error:
-        return error_response(error, 400)
+    validated_data, error = validate_data(LoginSchema, data)
     
+    if error:
+        return validated_data
+
     user = await account_service.find_user_by_email(validated_data.email)
     if not user or not check_password_hash(user["password"], validated_data.password):
         return error_response("Invalid email or password", 401)
@@ -61,9 +64,10 @@ async def login_user(data: Dict[str, Any]) -> Dict[str, Any]:
 async def update_user(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
     """Update user data by user ID."""
     validated_data, error = validate_data(UpdateUserSchema, data)
-    if error:
-        return error_response(error, 400)
     
+    if error:
+        return validated_data
+
     result = await account_service.update_user(user_id, data)
     if not result.modified_count:
         return error_response("Not found or unchanged", 404)
@@ -132,9 +136,10 @@ async def get_clean_user_by_id(user_id: int) -> Dict[str, Any]:
 async def mass_verify_users(data: Dict[str, any]) -> Dict[str, Any]:
     """Mass verify user's based on ID"""
     validated_data, error = validate_data(VerifyUsersSchema, data)
-    if error:
-        return error_response(error, 400)
     
+    if error:
+        return validated_data
+
     if not (verified := await account_service.mass_verify_users(data["users"])).modified_count:
         return error_response("Not found or unchanged", 404)
 
@@ -171,7 +176,7 @@ async def update_password(data: Dict[str,Any]):
             return error_response("Invalid JWT token", 400)
 
         if error:
-            return error_response(error,400)
+            return validated_data
 
         user = await account_service.find_user_by_email(validated_data.email)
 
