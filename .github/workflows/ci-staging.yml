@@ -49,5 +49,5 @@ jobs:
                       docker pull ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
                       docker stop staging-nautilus-backend
                       docker rm staging-nautilus-backend
-                      docker run -d --name staging-nautilus-backend -p 3000:3000 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
+                      docker run -d --name staging-nautilus-backend -p 7001:7001 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
                       docker logout ghcr.io
