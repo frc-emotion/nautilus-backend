@@ -38,6 +38,15 @@ jobs:
                   tags: ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
             - name: Connect to server and trigger redeploy of docker containers
               uses: appleboy/ssh-action@v1.0.0
+              env:
+                DB_NAME: ${{ secrets.DB_NAME_STAGING }}
+                MONGO_URI: ${{ secrets.MONGO_URI_STAGING }}
+                PRODUCTION: ${{ secrets.PRODUCTION_STAGING }}
+                EXPO_TOKEN: ${{ secrets.EXPO_TOKEN_STAGING }}
+                JWT_SECRET: ${{ secrets.JWT_SECRET_STAGING }}
+                MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY_STAGING }}
+                MAILGUN_ENDPOINT: ${{ secrets.MAILGUN_ENDPOINT_STAGING }}
+                MAILGUN_FROM_EMAIL: ${{ secrets.MAILGUN_FROM_EMAIL_STAGING }}
               with:
                   host: "staging.team2658.org"
                   username: "root"

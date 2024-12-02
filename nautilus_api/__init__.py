@@ -1,3 +1,4 @@
+import json
 from beartype.claw import beartype_this_package
 
 from nautilus_api.routes import notification_routes
@@ -44,7 +45,17 @@ def create_app():
     app = Quart(__name__)
 
     # Enable CORS for all routes
-    app = cors(app, allow_origin="*")
+    #app = cors(app, allow_origin="*")
+
+    logger.info("Starting Nautilus API")
+    
+    # Config
+    
+    if not Config.PRODUCTION:
+        logger.info("Running in development mode")
+        logger.info("Config for API: ")
+        logger.info(json.dumps(json.loads(Config.__dict__), indent=4))
+
 
     # Setup MongoDB client
     mongo_client = AsyncIOMotorClient(Config.MONGO_URI)
