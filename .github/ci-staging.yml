@@ -48,7 +48,7 @@ jobs:
                       docker logout ghcr.io
                       docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.staging }}
                       docker pull ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
-                      docker stop website
-                      docker rm website
-                      docker run -d --name website -p 3000:3000 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
+                      docker stop nautilus-backend
+                      docker rm nautilus-backend
+                      docker run -d --name nautilus-backend -p 3000:3000 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
                       docker logout ghcr.io
