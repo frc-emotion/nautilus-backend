@@ -12,7 +12,11 @@ from nautilus_api.schemas.utils import format_validation_error
 
 # Attendance logging function
 async def log_attendance(data: Dict[str, Any], user_id: int) -> Dict[str, Union[str, int]]:
-    validated_data = await validate_data(AttendanceLogSchema, data, "Log Attendance")
+    validated_data, error = validate_data(AttendanceLogSchema, data, "Log Attendance")
+
+    if error:
+        return validated_data
+
     if isinstance(validated_data, dict): return validated_data  # Return error if validation failed
 
     meeting = await attendance_service.get_meeting_by_id(validated_data.meeting_id)
@@ -44,8 +48,10 @@ async def get_attendance_hours(user_id: int) -> Dict[str, Union[int, str]]:
 
 # Function to remove an attendance log
 async def remove_attendance(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
-    validated_data = await validate_data(AttendanceLogSchema, data, "Remove Attendance")
-    if isinstance(validated_data, dict): return validated_data  # Return error if validation failed
+    validated_data, error = validate_data(AttendanceLogSchema, data, "Remove Attendance")
+
+    if error:
+        return validated_data
 
     if not await attendance_service.remove_attendance(validated_data.model_dump(exclude_unset=True)):
         return error_response("Attendance log not found", 404)
@@ -54,8 +60,10 @@ async def remove_attendance(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
 
 # Function to modify an attendance log
 async def modify_attendance(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
-    validated_data = await validate_data(RemoveAttendanceLogSchema, data, "Modify Attendance")
-    if isinstance(validated_data, dict): return validated_data  # Return error if validation failed
+    validated_data, error = validate_data(RemoveAttendanceLogSchema, data, "Modify Attendance")
+
+    if error:
+        return validated_data
 
     if not await attendance_service.modify_attendance(validated_data.model_dump(exclude_unset=True)):
         return error_response("Attendance log not found", 404)
@@ -64,9 +72,10 @@ async def modify_attendance(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
 
 # Function to create a meeting
 async def create_meeting(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
-    validated_data = await validate_data(MeetingSchema, data, "Create Meeting")
+    validated_data, error = validate_data(MeetingSchema, data, "Create Meeting")
     
-    if isinstance(validated_data, dict): return validated_data  # Return error if validation failed
+    if error:
+        return validated_data
 
     validated_data = validated_data.model_dump(exclude_unset=True)
 
@@ -108,8 +117,10 @@ async def get_all_clean_meetings() -> Dict[str, Union[list, int]]:
 
 # Function to update a meeting
 async def update_meeting(meeting_id: int, data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
-    validated_data = await validate_data(MeetingSchema, data, "Update Meeting")
-    if isinstance(validated_data, dict): return validated_data  # Return error if validation failed
+    validated_data, error = validate_data(MeetingSchema, data, "Update Meeting")
+
+    if error:
+        return validated_data
 
     result = await attendance_service.update_meeting(meeting_id, validated_data.model_dump(exclude_unset=True))
     if not result.modified_count:
@@ -145,8 +156,10 @@ async def get_all_attendance() -> Dict[str, Union[list, int]]:
     return success_response("Attendance retrieved", 200, {"attendance": attendance})
 
 async def add_manual_attendance(data: Dict[str, Any]) -> Dict[str, Union[str, int]]:
-    validated_data = await validate_data(ManualAttendanceLogSchema, data, "Add Manual Attendance")
-    if isinstance(validated_data, dict): return validated_data  # Return error if validation failed
+    validated_data, error = validate_data(ManualAttendanceLogSchema, data, "Add Manual Attendance")
+
+    if error:
+        return validated_data
 
     user_id = validated_data.user_id
     attendance_log = validated_data.attendanceLog    

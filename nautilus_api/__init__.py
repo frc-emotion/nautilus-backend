@@ -27,7 +27,7 @@ def flip_name(log_path):
 mongo_client = None  # Global MongoDB client
 
 # Configure logger
-logger.add(sink="nautilus-backend_{time}.log", rotation="1 day", retention="14 days", level="INFO", enqueue=True)
+logger.add(sink="logs/nautilus-backend_{time}.log", rotation="1 day", retention="14 days", level="INFO", enqueue=True)
 
 # Load version info from 'version.json'
 def load_version_info():
