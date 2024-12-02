@@ -41,11 +41,11 @@ jobs:
               with:
                   host: "staging.team2658.org"
                   username: "root"
-                  key: ${{ secrets.STAGING_KEY }}
+                  key: ${{ secrets.SSH_KEY }}
                   port: 22
                   script: |
                       docker logout ghcr.io
-                      docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.STAGING_KEY }}
+                      docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.SSH_KEY }}
                       docker pull ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
                       docker stop nautilus-backend
                       docker rm nautilus-backend
