@@ -1,16 +1,12 @@
 from beartype.claw import beartype_this_package
+beartype_this_package()
 
 from nautilus_api.routes import notification_routes
-beartype_this_package()
 import httpx
 from quart import Quart
-from quart_cors import cors
 from motor.motor_asyncio import AsyncIOMotorClient
 from .routes import account_routes, auth_routes, attendance_routes, meeting_routes
 from .config import Config
-import logging
-from logging.handlers import TimedRotatingFileHandler, QueueHandler, QueueListener
-import queue
 import os
 from exponent_server_sdk_async import (
     AsyncPushClient,
@@ -44,7 +40,17 @@ def create_app():
     app = Quart(__name__)
 
     # Enable CORS for all routes
-    app = cors(app, allow_origin="*")
+    #app = cors(app, allow_origin="*")
+
+    logger.info("Starting Nautilus API")
+    
+    # Config
+    
+    if not Config.PRODUCTION:
+        logger.info("Running in development mode")
+        logger.info("Config for API: ")
+        logger.info(Config.__dict__)
+
 
     # Setup MongoDB client
     mongo_client = AsyncIOMotorClient(Config.MONGO_URI)
