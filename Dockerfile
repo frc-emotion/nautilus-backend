@@ -17,4 +17,4 @@ RUN poetry install --no-interaction
 
 COPY . /app
 
-CMD ["hypercorn", "main:app", "-b", "0.0.0.0:7001"]
+CMD ["python", "main.py"]
