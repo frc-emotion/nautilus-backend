@@ -171,7 +171,7 @@ async def refresh_user(user: Dict[str, Any]) -> Dict[str, Any]:
     return success_response("User refreshed", 200, {"user": user})
 
 async def update_password(data: Dict[str,Any]):
-        validated_data, error = validate_data(data, ForgotPasswordSchema)
+        validated_data, error = validate_data(ForgotPasswordSchema, data)
         if not account_service.verify_jwt_token(validated_data.token):
             return error_response("Invalid JWT token", 400)
 
