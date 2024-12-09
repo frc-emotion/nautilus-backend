@@ -3,7 +3,6 @@ from typing import Any, Dict, Optional
 from beartype.claw import beartype_this_package
 import jwt
 from quart_rate_limiter import RateLimit, RateLimiter, remote_addr_key
-import urllib
 beartype_this_package()
 
 from nautilus_api.routes import notification_routes
@@ -86,10 +85,7 @@ def create_app():
 
 
     # Setup MongoDB client
-    # Escape username and password for MongoDB URI
-    username_escaped = urllib.parse.quote_plus(Config.API_URL.split("://")[1].split(":")[0])
-    password_escaped = urllib.parse.quote_plus(Config.API_URL.split("://")[1].split(":")[1].split("@")[0])
-    mongo_client = AsyncIOMotorClient(f"mongodb://{username_escaped}:{password_escaped}@{Config.API_URL.split('@')[1]}")
+    mongo_client = AsyncIOMotorClient(Config.MONGO_URI)
     app.db = mongo_client[Config.DB_NAME]
 
     async_expo_client = httpx.AsyncClient(
