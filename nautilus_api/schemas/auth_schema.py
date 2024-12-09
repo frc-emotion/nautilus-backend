@@ -50,6 +50,5 @@ class VerifyUsersSchema(BaseModel):
     users: List[int] = Field(..., description="List of user IDs to verify")
 
 class ForgotPasswordSchema(BaseModel):
-    email:str=Field(..., description="The email of the user")
-    password: str = Field(..., description="Password of the user")
-    token: str=Field(...,description="JWT token")
+    password: str = Field(..., description="New password with at least 8 characters, including letters and numbers")
+    token: str=Field(...,description="JWT token for password reset")

@@ -17,7 +17,7 @@ jobs:
     env:
       DB_NAME: ${{ secrets.DB_NAME_STAGING }}
       MONGO_URI: ${{ secrets.MONGO_URI_STAGING }}
-      PRODUCTION: ${{ secrets.PRODUCTION_STAGING }}
+      ENVIRONMENT: ${{ secrets.ENVIRONMENT_STAGING }}
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN_STAGING }}
       JWT_SECRET: ${{ secrets.JWT_SECRET_STAGING }}
       MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY_STAGING }}
@@ -64,5 +64,5 @@ jobs:
             docker pull ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
             docker stop staging-nautilus-backend || true
             docker rm staging-nautilus-backend || true
-            docker run -d --name staging-nautilus-backend -e DB_NAME="${{ env.DB_NAME }}" -e MONGO_URI="${{ env.MONGO_URI }}" -e PRODUCTION="${{ env.PRODUCTION }}" -e EXPO_TOKEN="${{ env.EXPO_TOKEN }}" -e JWT_SECRET="${{ env.JWT_SECRET }}" -e MAILGUN_API_KEY="${{ env.MAILGUN_API_KEY }}" -e MAILGUN_ENDPOINT="${{ env.MAILGUN_ENDPOINT }}" -e MAILGUN_FROM_EMAIL="${{ env.MAILGUN_FROM_EMAIL }}" -p 7001:7001 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
+            docker run -d --name staging-nautilus-backend -e DB_NAME="${{ env.DB_NAME }}" -e MONGO_URI="${{ env.MONGO_URI }}" -e ENVIRONMENT="${{ env.ENVIRONMENT }}" -e EXPO_TOKEN="${{ env.EXPO_TOKEN }}" -e JWT_SECRET="${{ env.JWT_SECRET }}" -e MAILGUN_API_KEY="${{ env.MAILGUN_API_KEY }}" -e MAILGUN_ENDPOINT="${{ env.MAILGUN_ENDPOINT }}" -e MAILGUN_FROM_EMAIL="${{ env.MAILGUN_FROM_EMAIL }}" -p 7001:7001 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
             docker logout ghcr.io

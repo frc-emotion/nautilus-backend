@@ -4,8 +4,9 @@ class Config:
     # MongoDB connection URI, defaulting to localhost for development
     MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017")
     
-    # Production flag
-    PRODUCTION: bool = os.getenv("PRODUCTION", "False").lower() == "true"
+    # Production, staging, or development environment
+    # prod, stage, dev
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development") 
 
     # Expo push token
     EXPO_TOKEN: str = os.getenv("EXPO_TOKEN", "")
@@ -43,4 +44,13 @@ class Config:
 
     MAILGUN_FROM_EMAIL: str = os.getenv("MAILGUN_FROM_EMAIL", "")
 
+    # If dev/stage then port 7001
+    # If prod then port 7000
+    PORT: int = 7001 if ENVIRONMENT == "dev" or ENVIRONMENT == "stage" else 7000
+
+    # If dev then http://localhost:7001
+    # if stage then https://staging.team2658.org
+    # If prod then https://api.team2658.org
+    API_URL: str = "http://localhost:7001" if ENVIRONMENT == "dev" else ("https://staging.team2658.org" if ENVIRONMENT == "stage" else "https://api.team2658.org")
+    
     

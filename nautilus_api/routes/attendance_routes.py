@@ -7,25 +7,25 @@ from nautilus_api.routes.utils import require_access
 
 attendance_api = Blueprint('attendance_api', __name__)
 
-@attendance_api.before_request
-def authenticate_user() -> None:
-    """Authenticate user using JWT token in the Authorization header."""
-    auth_header: Optional[str] = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token: str = auth_header.split(" ")[1]
-        try:
-            decoded_token: Dict[str, Any] = jwt.decode(token, Config.JWT_SECRET, algorithms=["HS256"])
-            g.user = decoded_token
-            current_app.logger.info(f"User {g.user.get('user_id')} authenticated successfully")
-        except jwt.ExpiredSignatureError:
-            g.user = None
-            current_app.logger.warning("Expired token provided for authentication")
-        except jwt.InvalidTokenError:
-            g.user = None
-            current_app.logger.warning("Invalid token provided for authentication")
-    else:
-        g.user = None
-        current_app.logger.warning("No token provided for authentication")
+# @attendance_api.before_request
+# def authenticate_user() -> None:
+#     """Authenticate user using JWT token in the Authorization header."""
+#     auth_header: Optional[str] = request.headers.get("Authorization")
+#     if auth_header and auth_header.startswith("Bearer "):
+#         token: str = auth_header.split(" ")[1]
+#         try:
+#             decoded_token: Dict[str, Any] = jwt.decode(token, Config.JWT_SECRET, algorithms=["HS256"])
+#             g.user = decoded_token
+#             current_app.logger.info(f"User {g.user.get('user_id')} authenticated successfully")
+#         except jwt.ExpiredSignatureError:
+#             g.user = None
+#             current_app.logger.warning("Expired token provided for authentication")
+#         except jwt.InvalidTokenError:
+#             g.user = None
+#             current_app.logger.warning("Invalid token provided for authentication")
+#     else:
+#         g.user = None
+#         current_app.logger.warning("No token provided for authentication")
 
 @attendance_api.errorhandler(Exception)
 async def handle_exception(e: Exception) -> tuple[Dict[str, str], int]:

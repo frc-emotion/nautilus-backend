@@ -1,9 +1,13 @@
+from datetime import timedelta
+from typing import Any, Dict, Optional
 from beartype.claw import beartype_this_package
+import jwt
+from quart_rate_limiter import RateLimit, RateLimiter, remote_addr_key
 beartype_this_package()
 
 from nautilus_api.routes import notification_routes
 import httpx
-from quart import Quart
+from quart import Quart, current_app, g, request
 from motor.motor_asyncio import AsyncIOMotorClient
 from .routes import account_routes, auth_routes, attendance_routes, meeting_routes
 from .config import Config
@@ -34,10 +38,38 @@ def load_version_info():
     except Exception as e:
         return {"error": str(e)}
     
+async def get_id():
+    auth_header: Optional[str] = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token: str = auth_header.split(" ")[1]
+        try:
+            decoded_token: Dict[str, Any] = jwt.decode(token, Config.JWT_SECRET, algorithms=["HS256"])
+            g.user = decoded_token
+            current_app.logger.info(f"User {g.user.get('user_id')} authenticated successfully")
+            return g.user.get("user_id")
+        except jwt.ExpiredSignatureError:
+            g.user = None
+            current_app.logger.warning("Expired token provided for authentication")
+            return request.access_route[0]
+        except jwt.InvalidTokenError:
+            g.user = None
+            current_app.logger.warning("Invalid token provided for authentication")
+            return request.access_route[0]
+    else:
+        g.user = None
+        current_app.logger.warning("No token provided for authentication")
+        return request.access_route[0]      
+    
+    
 def create_app():
     global mongo_client
 
     app = Quart(__name__)
+
+    rate_limiter = RateLimiter(app, key_function=get_id, default_limits=[
+        RateLimit(3, timedelta(seconds=1)),
+        RateLimit(60, timedelta(minutes=1)),
+    ],)
 
     # Enable CORS for all routes
     #app = cors(app, allow_origin="*")
@@ -46,7 +78,7 @@ def create_app():
     
     # Config
     
-    if not Config.PRODUCTION:
+    if not Config.ENVIRONMENT != "prod":
         logger.info("Running in development mode")
         logger.info("Config for API: ")
         logger.info(Config.__dict__)
@@ -74,6 +106,8 @@ def create_app():
 
     # Load version info
     app.version_info = load_version_info()
+
+    app.rate_limiter = rate_limiter
 
     @app.route("/version")
     async def version():
