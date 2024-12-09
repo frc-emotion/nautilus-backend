@@ -47,7 +47,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: ./Dockerfile.staging
+          file: ./Dockerfile.staging
           platforms: linux/amd64
           push: true
           tags: ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
