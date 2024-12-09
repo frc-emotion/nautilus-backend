@@ -44,6 +44,10 @@ class Config:
 
     MAILGUN_FROM_EMAIL: str = os.getenv("MAILGUN_FROM_EMAIL", "")
 
+    # If dev/stage then port 7001
+    # If prod then port 7000
+    PORT: int = 7001 if ENVIRONMENT == "dev" or ENVIRONMENT == "stage" else 7000
+
     # If dev then http://localhost:7001
     # if stage then https://staging.team2658.org
     # If prod then https://api.team2658.org

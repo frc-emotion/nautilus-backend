@@ -5,7 +5,7 @@ app = create_app()
 
 if __name__ == "__main__":
     try:
-        app.run(host="0.0.0.0", port=7001, debug=Config.ENVIRONMENT != "prod")
+        app.run(host="0.0.0.0", port=Config.PORT, debug=Config.ENVIRONMENT != "prod")
     except Exception as e:
         app.logger.error(f"Error starting app: {e}")
         raise e

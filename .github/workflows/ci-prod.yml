@@ -64,5 +64,5 @@ jobs:
             docker pull ghcr.io/frc-emotion/prod-nautilus-backend:amd-latest
             docker stop prod-nautilus-backend || true
             docker rm prod-nautilus-backend || true
-            docker run -d --name prod-nautilus-backend -e DB_NAME="${{ env.DB_NAME }}" -e MONGO_URI="${{ env.MONGO_URI }}" -e PRODUCTION="${{ env.PRODUCTION }}" -e EXPO_TOKEN="${{ env.EXPO_TOKEN }}" -e JWT_SECRET="${{ env.JWT_SECRET }}" -e MAILGUN_API_KEY="${{ env.MAILGUN_API_KEY }}" -e MAILGUN_ENDPOINT="${{ env.MAILGUN_ENDPOINT }}" -e MAILGUN_FROM_EMAIL="${{ env.MAILGUN_FROM_EMAIL }}" -p 7001:7001 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
+            docker run -d --name prod-nautilus-backend -e DB_NAME="${{ env.DB_NAME }}" -e MONGO_URI="${{ env.MONGO_URI }}" -e PRODUCTION="${{ env.PRODUCTION }}" -e EXPO_TOKEN="${{ env.EXPO_TOKEN }}" -e JWT_SECRET="${{ env.JWT_SECRET }}" -e MAILGUN_API_KEY="${{ env.MAILGUN_API_KEY }}" -e MAILGUN_ENDPOINT="${{ env.MAILGUN_ENDPOINT }}" -e MAILGUN_FROM_EMAIL="${{ env.MAILGUN_FROM_EMAIL }}" -p 7000:7000 ghcr.io/frc-emotion/prod-nautilus-backend:amd-latest
             docker logout ghcr.io
