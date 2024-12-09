@@ -10,5 +10,5 @@ if __name__ == "__main__":
         app.logger.error(f"Error starting app: {e}")
         raise e
     finally:
-        app.logger_listener.stop()
+        app.logger.stop()
         app.db.client.close()
