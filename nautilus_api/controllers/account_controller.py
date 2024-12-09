@@ -171,69 +171,99 @@ async def refresh_user(user: Dict[str, Any]) -> Dict[str, Any]:
     return success_response("User refreshed", 200, {"user": user})
 
 async def update_password(data: Dict[str,Any]):
-        validated_data, error = validate_data(data, ForgotPasswordSchema)
-        if not account_service.verify_jwt_token(validated_data.token):
+        validated_data, error = validate_data(ForgotPasswordSchema, data)
+        decode = account_service.verify_jwt_token(validated_data.token)
+
+        if not decode:
             return error_response("Invalid JWT token", 400)
 
         if error:
             return validated_data
 
-        user = await account_service.find_user_by_email(validated_data.email)
+        user = await account_service.find_user_by_id(decode.user_id)
 
         if not (len(validated_data.password) >= 8 and any(char.isalpha() for char in validated_data.password) and any(char.isdigit() for char in validated_data.password)):
             return error_response("Password must be at least 8 characters long, contain a letter and a number", 400)
 
         user_data = validated_data.model_dump(exclude_unset=True)
 
-        user_data.update({"password": generate_password_hash(validated_data.password),})
+        user_data.update({"password": generate_password_hash(validated_data.password)})
 
-        user_id= int(user["_id"])
+        user_id = int(user["_id"])
 
         if not (result := await account_service.update_user_profile(user_id, user_data)).modified_count:
             return error_response("Not found or unchanged", 404)
 
         return {"message": "User password updated", "status": 200}
 
-
-
-
-async def send_password_email(email:str):
+async def send_password_email(email: str):
     user = await account_service.find_user_by_email(email)
 
     if user is None:
-
-        # we don't want an error being returned so that people can't check which emails have been registered
-        return {
-            "success": True,
-            "email": email,
-            "message": "Email may have been successfully",
-            "status": 200,
-        }
+        # Do not reveal whether the email exists
+        return success_response("If the email exists, a reset link has been sent.", 200)
 
     token = await account_service.generate_jwt_token(user)
 
+    button_link = f"{Config.API_URL}/api/auth/redirect?token={token}"
+    reset_link = f"nautilus://forgot-password/{token}"
+
+    html = f"""
+                <html>
+  <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+      <div style="background-color: #fcf000; padding: 20px; text-align: center;">
+        <img src="https://cdn.team2658.org/web-public/icon.png" alt="App Icon" style="max-height: 128px; margin-bottom: 10px;" />
+        <h1 style="color: #262400; margin: 0; font-size: 24px;">Reset Your Password</h1>
+      </div>
+
+      <div style="padding: 20px;">
+        <p style="font-size: 16px; color: #333333;">
+          Hey there, <br />
+          Looks like you’ve just forgot your password again. Don’t worry, we’ve seen it all before. Click the button below to reset it and get things back on track:
+        </p>
+
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="{button_link}" style="background-color: #fcf000; color: #262400; text-decoration: none; font-size: 16px; padding: 10px 20px; border-radius: 5px; display: inline-block; font-weight: bold; border: 2px solid #d9ce00;">
+            Reset Password
+          </a>
+        </div>
+
+        <p style="font-size: 14px; color: #666666;">
+          If the button above doesn’t work, you can copy and paste this URL into your browser:
+        </p>
+        <p style="background-color: #fcfaca; border: 1px solid #fcf465; padding: 10px; border-radius: 4px; color: #333333; font-size: 14px; word-break: break-all;">
+          {reset_link}
+        </p>
+      </div>
+
+      <div style="background-color: #f9f9f9; text-align: center; padding: 10px; font-size: 12px; color: #888888;">
+        <p>
+          Didn’t request this? No worries—you can safely ignore this email.<br>(But if you somehow clicked "Reset Password" by accident, maybe rethink your clicking strategy.)
+        </p>
+        <p>
+          FRC Team #2658 | Made with ❤️ by Software
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
+            """
+
+    
+    current_app.logger.info(html)
     response = await current_app.http_client.post(
-    Config.MAILGUN_ENDPOINT,
+        Config.MAILGUN_ENDPOINT,
         auth=("api", Config.MAILGUN_API_KEY),
         data={
-        "from": Config.MAILGUN_FROM_EMAIL,
-        "to": [email],
-        "subject": "Reset Your Password",
-        "text": f"Open this link to reset your password for the nautlius app: nautilus://forgot-password/{email}/{token}",
-        "html": f"""
-            <html>
-                <body>
-                    <p>Make sure to close the Nautilus app before clicking the links! </p>
-                    <p>Click the link below to reset your password for the nautilus app:</p>
-                    <a href="nautilus://forgot-password/{email}/{token}">Reset Password</a>
-                    <p>If the link doesn't work, copy and paste this URL into your browser:</p>
-                    <p>nautilus://forgot-password/{email}/{token}</p>
-                </body>
-            </html>
-        """
-    }
-)
+            "from": Config.MAILGUN_FROM_EMAIL,
+            "to": [email],
+            "subject": "Forgot Your Password Again? We’ve Got You.",
+            "text": f"Open this link to reset your password for the Nautilus app: {reset_link}",
+            "html": html
+        }
+    )
     if response.status_code != 200:
         return error_response(f"Failed to send email. Mailgun response: {response.text}", response.status_code)
 
-    return success_response("Email may have been successfully", 200)
+    return success_response("If the email exists, a reset link has been sent.", 200)

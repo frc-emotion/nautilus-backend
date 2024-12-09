@@ -78,7 +78,7 @@ def create_app():
     
     # Config
     
-    if not Config.PRODUCTION:
+    if not Config.ENVIRONMENT != "prod":
         logger.info("Running in development mode")
         logger.info("Config for API: ")
         logger.info(Config.__dict__)

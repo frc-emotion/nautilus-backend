@@ -53,7 +53,7 @@ async def delete_user(user_id: str) -> tuple[Dict[str, Any], int]:
     return jsonify(result), result.get("status", 200)
 
 @account_api.route("/users", methods=["GET"])
-@require_access(specific_roles=["admin"])
+@require_access(minimum_role="executive")
 async def get_all_users() -> tuple[Dict[str, Any], int]:
     """Retrieve all users."""
     requester_id = g.user.get("user_id", "Unknown")

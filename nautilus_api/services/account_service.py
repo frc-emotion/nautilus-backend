@@ -118,3 +118,4 @@ def verify_jwt_token(token: str) -> Dict[str, Any]:
         return None
     except jwt.InvalidTokenError:
         return None
+    
