@@ -115,6 +115,9 @@ def create_app():
     
     @app.route("/")
     async def home():
+        if Config.ENVIRONMENT == "prod":
+            return ":)"
+        
         return "greetings curious one"
 
     # Register API routes
