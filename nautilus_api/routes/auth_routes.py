@@ -22,7 +22,7 @@ async def register() -> tuple[Dict[str, Union[str, int]], int]:
 
     result = await account_controller.register_user(data)
 
-    return result
+    return jsonify(result), result.get("status", 200)
 
 # Login user
 @auth_api.route("/login", methods=["POST"])
@@ -35,7 +35,7 @@ async def login():
 
     result = await account_controller.login_user(data)
 
-    return result
+    return jsonify(result), result.get("status", 200)
 
 @auth_api.route("/forgot-password", methods=["POST"])
 async def send_email():
@@ -46,7 +46,7 @@ async def send_email():
 
     result = await account_controller.send_password_email(data.get('email'))
 
-    return result
+    return jsonify(result), result.get("status", 200)
 
 
 @auth_api.route("/forgot-password", methods=["PUT"])

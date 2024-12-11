@@ -48,6 +48,7 @@ async def login_user(data: Dict[str, Any]) -> Dict[str, Any]:
         return validated_data
 
     user = await account_service.find_user_by_email(validated_data.email)
+    
     if not user or not check_password_hash(user["password"], validated_data.password):
         return error_response("Invalid email or password", 401)
 
