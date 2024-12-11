@@ -6,7 +6,7 @@ class Config:
     
     # Production, staging, or development environment
     # prod, stage, dev
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development") 
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "dev") 
 
     # Expo push token
     EXPO_TOKEN: str = os.getenv("EXPO_TOKEN", "")
