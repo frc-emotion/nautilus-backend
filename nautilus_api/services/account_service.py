@@ -38,8 +38,11 @@ async def add_new_user(data: Dict[str, Any]) -> InsertOneResult:
     account_collection = await get_collection("users")
 
     all_users = await account_collection.find().to_list(None)
-
-    data["_id"] = all_users[-1]["_id"] + 1 # since we need user id to be a 16 bit integer
+    
+    if len(all_users) == 0:
+        data["_id"] = 1
+    else:
+        data["_id"] = all_users[-1]["_id"] + 1 # since we need user id to be a 16 bit integer
 
     return await account_collection.insert_one(data)
 
