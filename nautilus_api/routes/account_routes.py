@@ -30,6 +30,12 @@ account_api = Blueprint("account_api", __name__)
 @account_api.errorhandler(Exception)
 async def handle_exception(e: Exception) -> Any:
     """Handle unexpected exceptions by logging the error and returning a generic error message."""
+    # Check if 429 error is raised
+    if type(e).__name__ == "RateLimitExceeded":
+        # Retry after
+        headers = e.get_headers()
+        return jsonify({"error": "Rate limit exceeded. Please try again later."}), 429, headers
+
     current_app.logger.error(f"Unhandled exception: {e}")
     return jsonify({"error": "An unexpected error occurred. Please report this immediately!"}), 500
 

@@ -30,6 +30,11 @@ attendance_api = Blueprint('attendance_api', __name__)
 @attendance_api.errorhandler(Exception)
 async def handle_exception(e: Exception) -> tuple[Dict[str, str], int]:
     """Handle unexpected errors and log the exception."""
+    if type(e).__name__ == "RateLimitExceeded":
+        # Retry after
+        headers = e.get_headers()
+        return jsonify({"error": "Rate limit exceeded. Please try again later."}), 429, headers
+    
     user_id = g.user.get("user_id") if g.user else "Unknown"
     current_app.logger.error(f"Unhandled exception for user {user_id}: {e}")
     return jsonify({"error": "An unexpected error occurred. Please report this immediately!"}), 500

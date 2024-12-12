@@ -8,6 +8,11 @@ auth_api = Blueprint('auth_api', __name__)
 @auth_api.errorhandler(Exception)
 async def handle_exception(e: Exception) -> tuple[Dict[str, str], int]:
     """Handle unexpected errors and log the exception."""
+    if type(e).__name__ == "RateLimitExceeded":
+        # Retry after
+        headers = e.get_headers()
+        return jsonify({"error": "Rate limit exceeded. Please try again later."}), 429, headers
+
     user_id = g.user.get("user_id") if g.user else "Unknown"
     current_app.logger.error(f"Unhandled exception for user {user_id}: {e}")
     return error_response("An unexpected error occurred. Please report this immediately!", 500)
