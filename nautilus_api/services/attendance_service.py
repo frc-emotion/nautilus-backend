@@ -134,7 +134,10 @@ async def create_meeting(data: Dict[str, Any]) -> InsertOneResult:
     # Meeting id must be a 16 bit number so we cant use the default ObjectId. Start at 0 and increment by 1 (essentially a counter)
     all_meetings = await meeting_collection.find().to_list(None)
 
-    meeting_id = all_meetings[-1]["_id"] + 1
+    if len(all_meetings) != 0:
+        meeting_id = all_meetings[-1]["_id"] + 1
+    else:
+        meeting_id = 1
 
     new_meeting = {
         "title": data["title"],
