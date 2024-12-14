@@ -134,6 +134,6 @@ async def delete_user_g() -> tuple[Dict[str, Any], int]:
     if not g.user:
         return jsonify({"error": "Invalid or expired token"}), 401
 
-    result = await account_controller.delete_user(g.user.user_id)
+    result = await account_controller.delete_user(int(g.user["user_id"]))
 
     return jsonify(result), 200
