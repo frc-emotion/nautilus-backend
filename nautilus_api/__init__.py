@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Any, Dict, Optional
 from beartype.claw import beartype_this_package
 import jwt
+from quart_cors import cors
 from quart_rate_limiter import RateLimit, RateLimiter, remote_addr_key
 beartype_this_package()
 
@@ -72,7 +73,7 @@ def create_app():
     ],)
 
     # Enable CORS for all routes
-    #app = cors(app, allow_origin="*")
+    app = cors(app, allow_origin="*") # TODO: SHOULD BE CHANGED TO THE FRONTEND URL
 
     logger.info("Starting Nautilus API")
     
