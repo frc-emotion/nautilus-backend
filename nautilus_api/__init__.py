@@ -68,7 +68,11 @@ def create_app():
     app = Quart(__name__)
 
     # Enable CORS for all routes
-    app = cors(app, allow_origin="*") # TODO: SHOULD BE CHANGED TO THE FRONTEND URL
+    app = cors(app, 
+               allow_origin="*",
+               allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+           allow_headers=["Content-Type", "Authorization"],
+           allow_credentials=True) # TODO: SHOULD BE CHANGED TO THE FRONTEND URL
 
     rate_limiter = RateLimiter(app, key_function=get_id, default_limits=[
         RateLimit(3, timedelta(seconds=1)),
