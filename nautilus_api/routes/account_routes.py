@@ -127,3 +127,13 @@ async def validate_token() -> tuple[Dict[str, Any], int]:
 
     return jsonify(result), 200
 
+@account_api.route("/delete", methods=["DELETE"])
+@require_access(minimum_role="unverified")
+async def delete_user() -> tuple[Dict[str, Any], int]:
+    """Delete a user account."""
+    if not g.user:
+        return jsonify({"error": "Invalid or expired token"}), 401
+
+    result = await account_controller.delete_user(g.user)
+
+    return jsonify(result), 200
