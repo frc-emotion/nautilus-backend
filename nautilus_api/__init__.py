@@ -67,13 +67,13 @@ def create_app():
 
     app = Quart(__name__)
 
+    # Enable CORS for all routes
+    app = cors(app, allow_origin="*") # TODO: SHOULD BE CHANGED TO THE FRONTEND URL
+
     rate_limiter = RateLimiter(app, key_function=get_id, default_limits=[
         RateLimit(3, timedelta(seconds=1)),
         RateLimit(60, timedelta(minutes=1)),
     ],)
-
-    # Enable CORS for all routes
-    app = cors(app, allow_origin="*") # TODO: SHOULD BE CHANGED TO THE FRONTEND URL
 
     logger.info("Starting Nautilus API")
     
