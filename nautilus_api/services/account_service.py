@@ -122,3 +122,7 @@ def verify_jwt_token(token: str) -> Dict[str, Any]:
     except jwt.InvalidTokenError:
         return None
     
+async def find_student_id_directory(student_id: int) -> Optional[Dict[str, Any]]:
+    """Retrieve user by student_id."""
+    account_collection = await get_collection("directory")
+    return await account_collection.find_one({"student_id": student_id})
