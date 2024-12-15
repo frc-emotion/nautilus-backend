@@ -332,3 +332,15 @@ async def send_password_email(email: str):
         return error_response(f"Failed to send email. Mailgun response: {response.text}", response.status_code)
 
     return success_response("If the email exists, a reset link has been sent.", 200)
+
+async def mass_delete_users(data: Dict[str, any]) -> Dict[str, Any]:
+    """Mass delete user's based on ID"""
+    validated_data, error = validate_data(VerifyUsersSchema, data)
+    
+    if error:
+        return validated_data
+
+    if not (deleted := await account_service.mass_delete_users(data["users"])).deleted_count:
+        return error_response("Not found or unchanged", 404)
+
+    return success_response("Users deleted", 200)

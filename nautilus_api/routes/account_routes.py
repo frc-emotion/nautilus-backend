@@ -105,6 +105,18 @@ async def verify_user() -> tuple[Dict[str, Any], int]:
     result: Dict[str, Any] = await account_controller.mass_verify_users(data)
     return jsonify(result), result.get("status", 200)
 
+# Mass delete users
+@account_api.route("/users/delete", methods=["POST"])
+@require_access(minimum_role="admin")
+async def delete_users() -> tuple[Dict[str, Any], int]:
+    """Delete multiple users by user ID."""
+    data: Dict[str, Any] = await request.get_json()
+    requester_id = g.user.get("user_id", "Unknown")
+    current_app.logger.info(f"User {requester_id} mass deleting users using data: {data}")
+    result: Dict[str, Any] = await account_controller.mass_delete_users(data)
+    return jsonify(result), result.get("status", 200)
+
+
 # # Update a user's profile 
 # @account_api.route("/users/profile/<int:user_id>", methods=["PUT"])
 # @require_access(minimum_role="member")

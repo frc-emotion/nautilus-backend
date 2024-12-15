@@ -126,3 +126,8 @@ async def find_student_id_directory(student_id: int) -> Optional[Dict[str, Any]]
     """Retrieve user by student_id."""
     account_collection = await get_collection("directory")
     return await account_collection.find_one({"student_id": student_id})
+
+async def mass_delete_users(user_ids: list[int]) -> DeleteResult:
+    """Delete multiple users by ID."""
+    account_collection = await get_collection("users")
+    return await account_collection.delete_many({"_id": {"$in": user_ids}})
