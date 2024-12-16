@@ -1,5 +1,5 @@
 from quart import current_app
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 from datetime import datetime, timezone, timedelta
 import jwt
 from nautilus_api.config import Config
@@ -104,7 +104,7 @@ async def mass_verify_users(user_ids: list[int]) -> UpdateResult:
         {"$set": {"role": "member"}}
     )
 
-def verify_jwt_token(token: str) -> Dict[str, Any]:
+def verify_jwt_token(token: str) -> Union[Dict[str, Any], None]:
     try:
         # Decode the token with the secret and algorithm used for encoding
         decoded_payload = jwt.decode(token, Config.JWT_SECRET, algorithms=["HS256"])

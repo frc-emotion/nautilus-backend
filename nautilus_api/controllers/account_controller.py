@@ -285,7 +285,7 @@ async def send_password_email(email: str):
       <div style="padding: 20px;">
         <p style="font-size: 16px; color: #333333;">
           Hey there, <br />
-          Looks like you’ve just forgot your password again. Don’t worry, we’ve seen it all before. Click the button below to reset it and get things back on track:
+          Looks like you’ve just forgot your password again. Don’t worry, we’ve seen it all before. Click the button below to reset it and get things back on track. <strong>Warning: Resetting your password only works on mobile</strong>
         </p>
 
         <div style="text-align: center; margin: 20px 0;">
@@ -295,7 +295,7 @@ async def send_password_email(email: str):
         </div>
 
         <p style="font-size: 14px; color: #666666;">
-          If the button above doesn’t work, you can copy and paste this URL into your browser:
+          If the button above doesn’t work, you can copy and paste this URL into your <strong>mobile</strong> browser:
         </p>
         <p style="background-color: #fcfaca; border: 1px solid #fcf465; padding: 10px; border-radius: 4px; color: #333333; font-size: 14px; word-break: break-all;">
           {reset_link}
@@ -328,6 +328,9 @@ async def send_password_email(email: str):
             "html": html
         }
     )
+
+    l
+
     if response.status_code != 200:
         return error_response(f"Failed to send email. Mailgun response: {response.text}", response.status_code)
 
