@@ -245,7 +245,7 @@ async def update_password(data: Dict[str,Any]):
         if error:
             return validated_data
 
-        user = await account_service.find_user_by_id(decode.user_id)
+        user = await account_service.find_user_by_id(decode["user_id"])
 
         if not (len(validated_data.password) >= 8 and any(char.isalpha() for char in validated_data.password) and any(char.isdigit() for char in validated_data.password)):
             return error_response("Password must be at least 8 characters long, contain a letter and a number", 400)
