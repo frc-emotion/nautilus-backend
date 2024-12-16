@@ -8,6 +8,65 @@ from nautilus_api.schemas.auth_schema import ForgotPasswordSchema, RegisterSchem
 from werkzeug.security import generate_password_hash, check_password_hash
 from typing import Any, Dict
 
+async def cross_reference_studentID(student_id: int, first_name: str, last_name: str, grade: int) -> Dict[str, Any]:
+    """Cross reference student ID against directory records, returning flags."""
+    flags = []
+    user = await account_service.find_student_id_directory(student_id)
+
+    if not user:
+        flags.append({
+            "field": "student_id",
+            "issue": "not_found",
+            "student_id": student_id
+        })
+        return {"flags": flags}
+
+    # Check for missing first_name in directory
+    if user["first_name"] == "":
+        flags.append({
+            "field": "first_name",
+            "issue": "missing_directory"
+        })
+
+    # Handle missing last_name in directory case
+    if user["last_name"] == "":
+        # Compare given first_name to directory's first_name
+        if user["first_name"].lower() != first_name.lower():
+            flags.append({
+                "field": "first_name",
+                "issue": "mismatch",
+                "expected": user["first_name"],
+                "actual": first_name
+            })
+    else:
+        # Directory has a last_name, compare both
+        if user["first_name"].lower() != first_name.lower():
+            flags.append({
+                "field": "first_name",
+                "issue": "mismatch",
+                "expected": user["first_name"],
+                "actual": first_name
+            })
+
+        if user["last_name"].lower() != last_name.lower():
+            flags.append({
+                "field": "last_name",
+                "issue": "mismatch",
+                "expected": user["last_name"],
+                "actual": last_name
+            })
+
+    # Compare grades
+    if user.get("grade") is not None and user["grade"] != grade:
+        flags.append({
+            "field": "grade",
+            "issue": "mismatch",
+            "expected": int(user["grade"]),
+            "actual": int(grade)
+        })
+
+    return flags
+
 async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
     """Register a new user with validated data."""
     validated_data, error = validate_data(RegisterSchema, data)
@@ -23,6 +82,8 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
 
     if not (len(validated_data.password) >= 8 and any(char.isalpha() for char in validated_data.password) and any(char.isdigit() for char in validated_data.password)):
         return error_response("Password must be at least 8 characters long, contain a letter and a number", 400)
+    
+    flags = await cross_reference_studentID(int(validated_data.student_id), validated_data.first_name, validated_data.last_name, validated_data.grade)
 
     user_data = validated_data.model_dump(exclude_unset=True)
     user_data.update(
@@ -31,9 +92,10 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
             "role": "unverified", 
             "password": generate_password_hash(validated_data.password),
             "created_at": datetime.now(timezone.utc).timestamp(),
-            "notification_token": ""
-            })
-
+            "notification_token": "",
+            "flags": flags
+        }
+    )
 
     if not (result := await account_service.add_new_user(user_data)).inserted_id:
         return error_response("Error creating account. Please try again later!", 500)
@@ -131,6 +193,8 @@ async def get_clean_user_by_id(user_id: int) -> Dict[str, Any]:
     user.pop("phone", None)
     user.pop("api_version", None)
     user.pop("created_at", None)
+    user.pop("notification_token", None)
+    user.pop("flags", None)
 
     return success_response("User retrieved", 200, {"user": user})
 
@@ -268,3 +332,15 @@ async def send_password_email(email: str):
         return error_response(f"Failed to send email. Mailgun response: {response.text}", response.status_code)
 
     return success_response("If the email exists, a reset link has been sent.", 200)
+
+async def mass_delete_users(data: Dict[str, any]) -> Dict[str, Any]:
+    """Mass delete user's based on ID"""
+    validated_data, error = validate_data(VerifyUsersSchema, data)
+    
+    if error:
+        return validated_data
+
+    if not (deleted := await account_service.mass_delete_users(data["users"])).deleted_count:
+        return error_response("Not found or unchanged", 404)
+
+    return success_response("Users deleted", 200)
