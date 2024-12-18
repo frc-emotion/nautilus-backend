@@ -57,7 +57,7 @@ async def cross_reference_studentID(student_id: int, first_name: str, last_name:
             })
 
     # Compare grades
-    if user.get("grade") is not None and user["grade"] != grade:
+    if user.get("grade") is not None and int(user["grade"]) != grade:
         flags.append({
             "field": "grade",
             "issue": "mismatch",
