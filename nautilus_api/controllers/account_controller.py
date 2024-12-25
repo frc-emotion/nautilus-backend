@@ -85,6 +85,9 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
     
     flags = await cross_reference_studentID(int(validated_data.student_id), validated_data.first_name, validated_data.last_name, validated_data.grade)
 
+    data["first_name"] = data["first_name"].title()
+    data["last_name"] = data["last_name"].title()
+
     user_data = validated_data.model_dump(exclude_unset=True)
     user_data.update(
         {
