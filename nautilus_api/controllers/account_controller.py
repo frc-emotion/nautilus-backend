@@ -147,12 +147,15 @@ async def update_user(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
     user.pop("created_at", None)
 
     return success_response("User updated", 200, {"user": user})
-
+    
 async def delete_user(user_id: int) -> Dict[str, Any]:
     """Delete a user by user ID."""
     if not (result := await account_service.delete_user(user_id)).deleted_count:
-        return error_response("User not found", 404)
-
+         return error_response("User not found", 404)
+    if not (result := await account_service.delete_user_meetings(user_id)):
+        return error_response("User couldn't be checked in meetings", 404)
+    if not (result := await account_service.delete_user_attendance(user_id)):
+        return error_response("User couldn't be checked in attendance",404)
     return success_response("User deleted", 200)
 
 async def get_all_users() -> Dict[str, Any]:

@@ -131,3 +131,24 @@ async def mass_delete_users(user_ids: list[int]) -> DeleteResult:
     """Delete multiple users by ID."""
     account_collection = await get_collection("users")
     return await account_collection.delete_many({"_id": {"$in": user_ids}})
+
+async def delete_user_meetings(user_id:int)->UpdateResult:
+    print(user_id)
+    """Delete a user's id in meeting attendance by id."""
+    student=await find_user_by_id(user_id)
+    student_id=student.get("student_id")
+    meetings_collection=await get_collection("meetings")
+    for document in await meetings_collection.find({}).to_list(length=None):
+            print(f"Document: {document}")
+
+    
+    result= await meetings_collection.update_many(
+        {"members_logged": student_id},
+        {"$pull": {"members_logged": student_id}}
+    )
+    print(result)
+    return(result)
+
+async def delete_user_attendance(user_id:int)->DeleteResult:
+    attendance_collection=await get_collection("attendance")
+    return await attendance_collection.delete_one({"_id":user_id})
