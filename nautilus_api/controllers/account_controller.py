@@ -332,7 +332,7 @@ async def send_password_email(email: str):
         }
     )
 
-    l
+    
 
     if response.status_code != 200:
         return error_response(f"Failed to send email. Mailgun response: {response.text}", response.status_code)
