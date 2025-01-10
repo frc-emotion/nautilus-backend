@@ -131,29 +131,7 @@ def get_submission_time():
 async def send_contact_form(data):
     validated_data=data
     submission_time = get_submission_time()
-    # validated_data, error = validate_data(ContactFormSchema, data, "Submit Contact Form")
-    # 
-    # if error:
-    #     return validated_data
-# 
-    # validated_data = validated_data.model_dump(exclude_unset=True)
-    
 
-    # subject = data.subject
-    # fieldsArr = [
-    #         {
-    #             "name": "Name",
-    #             "value": data.name,
-    #         },
-    #         {
-    #             "name": "Email",
-    #             "value": data.email,
-    #         },
-    #         {
-    #             "name": "Message",
-    #             "value": data.message,
-    #         },
-    #     ]
     subject = data["subject"]
     fieldsArr = [
             {
@@ -169,11 +147,11 @@ async def send_contact_form(data):
                 "value": data["message"],
             },
         ]
-    if "company" in data:
+    if data["company"]:
         fieldsArr.insert(1, {
-             "name" : "Company",
-             "value": data["company"]
-             })
+            "name" : "Company",
+            "value": data["company"]
+            })
 
     response = await current_app.http_client.post(
         "https://discord.com/api/webhooks/1326397927249154120/nNAKlC_iXRBogIxVX_LlorqUr-8SrUpshedrAevX_HPrmMS28utQwtK4uUTj4K_zuPyj"
