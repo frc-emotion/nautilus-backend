@@ -60,8 +60,6 @@ class RemoveAttendanceLogSchema(BaseModel):
 class ManualAttendanceLogSchema(BaseModel):
     user_id: int = Field(..., description="ID of the user")
     attendanceLog: ManualAttendanceLogSchema = Field(..., description="Attendance log data")
-    year: str = Field(..., description="Academic year")
-    term: int = Field(..., description="Academic term")
 
     @field_validator('attendanceLog')
     def check_meeting_id(cls, value):
