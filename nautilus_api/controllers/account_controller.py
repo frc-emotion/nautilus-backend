@@ -57,7 +57,7 @@ async def cross_reference_studentID(student_id: int, first_name: str, last_name:
             })
 
     # Compare grades
-    if user.get("grade") is not None and int(user["grade"]) != grade:
+    if user.get("grade") is not None and int(user["grade"]) != int(grade):
         flags.append({
             "field": "grade",
             "issue": "mismatch",
@@ -84,6 +84,9 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
         return error_response("Password must be at least 8 characters long, contain a letter and a number", 400)
     
     flags = await cross_reference_studentID(int(validated_data.student_id), validated_data.first_name, validated_data.last_name, validated_data.grade)
+
+    data["first_name"] = data["first_name"].title()
+    data["last_name"] = data["last_name"].title()
 
     user_data = validated_data.model_dump(exclude_unset=True)
     user_data.update(
