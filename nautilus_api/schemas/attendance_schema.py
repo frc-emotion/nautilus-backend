@@ -9,7 +9,7 @@ class MeetingSchema(BaseModel):
     time_end: int = Field(..., description="Unix timestamp for the end time")
     location: str = Field(..., description="Location of the meeting")
     description: str = Field(..., description="Detailed description of the meeting")
-    hours: int = Field(..., description="Duration of the meeting in hours")
+    hours: float = Field(..., description="Duration of the meeting in hours")
     term: int = Field(..., description="Academic term of the meeting")
     year: str = Field(..., description="Academic year of the meeting")
 
@@ -45,7 +45,7 @@ class ManualAttendanceLogSchema(BaseModel):
     flag: bool = Field(..., description="Flag to indicate if suspicious attendance")
     term: int = Field(..., description="Academic term")
     year: str = Field(..., description="Academic year")
-    hours: int = Field(..., description="Duration of the override in hours")
+    hours: float = Field(..., description="Duration of the override in hours")
 
 
 class AttendanceUserSchema(BaseModel):
