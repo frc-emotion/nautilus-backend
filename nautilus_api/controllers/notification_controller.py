@@ -132,6 +132,8 @@ async def send_contact_form(data):
     validated_data=data
     submission_time = get_submission_time()
 
+    data = {i:data[i].replace("@everyone",'@ everyone').replace("@here",'@ here') for i in data}
+
     subject = data["subject"]
     fieldsArr = [
             {
@@ -155,8 +157,7 @@ async def send_contact_form(data):
 
     response = await current_app.http_client.post(
         "https://discord.com/api/webhooks/1326397927249154120/nNAKlC_iXRBogIxVX_LlorqUr-8SrUpshedrAevX_HPrmMS28utQwtK4uUTj4K_zuPyj"
-,
-        
+,        
         json={
             "username": "team2658.org",
             "avatar_url":
