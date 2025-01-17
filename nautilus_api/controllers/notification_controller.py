@@ -8,7 +8,7 @@ from exponent_server_sdk_async import (
     PushServerError
 )
 from quart import current_app
-
+from nautilus_api.config import Config
 from nautilus_api.controllers.utils import error_response, success_response, validate_data
 from nautilus_api.schemas.notification_schema import TriggerNotificationSchema
 from nautilus_api.services import notification_service
@@ -156,8 +156,7 @@ async def send_contact_form(data):
             })
 
     response = await current_app.http_client.post(
-        "https://discord.com/api/webhooks/1326397927249154120/nNAKlC_iXRBogIxVX_LlorqUr-8SrUpshedrAevX_HPrmMS28utQwtK4uUTj4K_zuPyj"
-,        
+        Config.DISCORD_WEBHOOK,
         json={
             "username": "team2658.org",
             "avatar_url":
