@@ -23,6 +23,7 @@ jobs:
       MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY_PROD }}
       MAILGUN_ENDPOINT: ${{ secrets.MAILGUN_ENDPOINT_PROD }}
       MAILGUN_FROM_EMAIL: ${{ secrets.MAILGUN_FROM_EMAIL_PROD }}
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
     steps:
       - name: Checkout
@@ -65,5 +66,5 @@ jobs:
             docker pull ghcr.io/frc-emotion/prod-nautilus-backend:amd-latest
             docker stop prod-nautilus-backend || true
             docker rm prod-nautilus-backend || true
-            docker run -d --name prod-nautilus-backend -e DB_NAME="${{ env.DB_NAME }}" -e MONGO_URI="${{ env.MONGO_URI }}" -e ENVIRONMENT="${{ env.ENVIRONMENT }}" -e EXPO_TOKEN="${{ env.EXPO_TOKEN }}" -e JWT_SECRET="${{ env.JWT_SECRET }}" -e MAILGUN_API_KEY="${{ env.MAILGUN_API_KEY }}" -e MAILGUN_ENDPOINT="${{ env.MAILGUN_ENDPOINT }}" -e MAILGUN_FROM_EMAIL="${{ env.MAILGUN_FROM_EMAIL }}" -p 7000:7000 ghcr.io/frc-emotion/prod-nautilus-backend:amd-latest
+            docker run -d --name prod-nautilus-backend -e DISCORD_WEBHOOK="${{ env.DISCORD_WEBHOOK }}" -e DB_NAME="${{ env.DB_NAME }}" -e MONGO_URI="${{ env.MONGO_URI }}" -e ENVIRONMENT="${{ env.ENVIRONMENT }}" -e EXPO_TOKEN="${{ env.EXPO_TOKEN }}" -e JWT_SECRET="${{ env.JWT_SECRET }}" -e MAILGUN_API_KEY="${{ env.MAILGUN_API_KEY }}" -e MAILGUN_ENDPOINT="${{ env.MAILGUN_ENDPOINT }}" -e MAILGUN_FROM_EMAIL="${{ env.MAILGUN_FROM_EMAIL }}" -p 7000:7000 ghcr.io/frc-emotion/prod-nautilus-backend:amd-latest
             docker logout ghcr.io
