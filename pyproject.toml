@@ -9,7 +9,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.13"
-quart = "^0.19.6"
+quart = "^0.20.0"
 quart-schema = "^0.20.0"
 quart-rate-limiter = "^0.10.0"
 quart-mongo = "^0.1.2"
