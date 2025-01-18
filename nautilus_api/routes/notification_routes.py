@@ -72,3 +72,12 @@ async def check_notification_token() -> tuple[Dict[str, Any], int]:
     current_app.logger.info(f"User {user_id} checking notification token")
     result: Dict[str, Any] = await notification_controller.check_notification_token(user_id)
     return jsonify(result), result.get("status", 200)
+
+@notification_api.route("/webhook", methods=["POST"])
+async def send_contact_form():
+    """Send the contact form from the website to the discord webhook."""
+    data: Dict[str, Any] = await request.get_json()
+    print(data)
+    current_app.logger.info("Trying to send ")
+    result = await notification_controller.send_contact_form(data)
+    return jsonify({"status": result.status_code, "message": "Webhook sent"})

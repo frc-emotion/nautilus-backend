@@ -1,3 +1,4 @@
+import datetime
 from typing import Any, Dict
 from exponent_server_sdk_async import (
     AsyncPushClient,
@@ -7,7 +8,7 @@ from exponent_server_sdk_async import (
     PushServerError
 )
 from quart import current_app
-
+from nautilus_api.config import Config
 from nautilus_api.controllers.utils import error_response, success_response, validate_data
 from nautilus_api.schemas.notification_schema import TriggerNotificationSchema
 from nautilus_api.services import notification_service
@@ -119,3 +120,62 @@ async def check_notification_token(user_id: int) -> Dict[str, Any]:
         return error_response("No notification token set", 404)
 
     return success_response("Notification token found", 200, {"token": user.get("notification_token")})
+
+def get_submission_time():
+    now = datetime.datetime.now()
+    date_string = now.strftime("%a, %b %d, %Y")
+    time_string = now.strftime("%I:%M:%S %p")
+    submission_time = f"Submitted on {date_string} at {time_string}"
+    return submission_time
+
+async def send_contact_form(data):
+    validated_data=data
+    submission_time = get_submission_time()
+
+    data = {i:data[i].replace("@everyone",'@ everyone').replace("@here",'@ here') for i in data}
+
+    subject = data["subject"]
+    fieldsArr = [
+            {
+                "name": "Name",
+                "value": data["name"],
+            },
+            {
+                "name": "Email",
+                "value": data["email"],
+            },
+            {
+                "name": "Message",
+                "value": data["message"],
+            },
+        ]
+    if data["company"]:
+        fieldsArr.insert(1, {
+            "name" : "Company",
+            "value": data["company"]
+            })
+
+    response = await current_app.http_client.post(
+        Config.DISCORD_WEBHOOK,
+        json={
+            "username": "team2658.org",
+            "avatar_url":
+                "https://avatars.githubusercontent.com/u/36017746?s=400&u=e55b83cf74c03119a931a08fb43d566f9087cfa0&v=4",
+            "content": "New form submission🚨🚨🚨🚨🚨🚨🚨",
+            "embeds": [
+                {
+                    "title": "Subject: " + subject,
+                    "description":submission_time,
+                    "color": 15985179,
+                    "fields": fieldsArr
+                }
+            ]
+        },
+        headers={
+        "Content-Type": "application/json"
+    }
+    )
+
+    return response
+
+    
