@@ -63,3 +63,12 @@ def require_access(minimum_role: Optional[str] = None, specific_roles: Optional[
 
         return decorated_function
     return decorator
+
+async def sanitize_request(data: dict) -> dict:
+    """Strip all whitespace from request data."""
+    current_app.logger.info("Sanitizing request data")
+    for key in data:
+        if isinstance(data[key], str):
+            data[key] = data[key].strip()
+        
+    return data

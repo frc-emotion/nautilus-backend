@@ -2,6 +2,7 @@ from quart import Blueprint, jsonify, g, redirect, request, current_app
 from typing import Dict, Union
 from nautilus_api.controllers import account_controller
 from nautilus_api.controllers.utils import error_response, success_response
+from nautilus_api.routes.utils import sanitize_request
 
 auth_api = Blueprint('auth_api', __name__)
 
@@ -22,7 +23,9 @@ async def handle_exception(e: Exception) -> tuple[Dict[str, str], int]:
 async def register() -> tuple[Dict[str, Union[str, int]], int]:
     """Register a new user account."""
 
-    data = await request.get_json()
+    uncleaned_data = await request.get_json()
+    data = await sanitize_request(uncleaned_data)
+
     current_app.logger.info(f"Registering new user with data: {data.get('email', 'unknown')}")
 
     result = await account_controller.register_user(data)
@@ -34,7 +37,8 @@ async def register() -> tuple[Dict[str, Union[str, int]], int]:
 async def login():
     """Log in a user and return a JWT token if successful."""
 
-    data = await request.get_json()
+    uncleaned_data = await request.get_json()
+    data = await sanitize_request(uncleaned_data)
 
     current_app.logger.info(f"Attempting to log in user with data: {data.get('email', 'unknown')}")
 
@@ -44,7 +48,8 @@ async def login():
 
 @auth_api.route("/forgot-password", methods=["POST"])
 async def send_email():
-    data = await request.get_json()
+    uncleaned_data = await request.get_json()
+    data = await sanitize_request(uncleaned_data)
 
     if "email" not in data:
         return error_response("Email is required", 400)
@@ -57,7 +62,8 @@ async def send_email():
 @auth_api.route("/forgot-password", methods=["PUT"])
 async def update_password_endpoint():
     """Endpoint to update user password using token."""
-    data = await request.get_json()
+    uncleaned_data = await request.get_json()
+    data = await sanitize_request(uncleaned_data)
 
     if "token" not in data or "password" not in data:
         return error_response("Token and password are required", 400)
