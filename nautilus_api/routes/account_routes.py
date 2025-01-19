@@ -2,7 +2,7 @@ import jwt
 from quart import Blueprint, jsonify, g, request, current_app
 from nautilus_api.config import Config
 from nautilus_api.controllers import account_controller
-from nautilus_api.routes.utils import require_access
+from nautilus_api.routes.utils import require_access, sanitize_request
 from typing import Optional, Any, Dict
 
 account_api = Blueprint("account_api", __name__)
@@ -43,7 +43,8 @@ async def handle_exception(e: Exception) -> Any:
 @require_access(specific_roles=["admin"])
 async def update_user(user_id: str) -> tuple[Dict[str, Any], int]:
     """Update user data by user ID."""
-    data: Dict[str, Any] = await request.get_json()
+    uncleaned_data = await request.get_json()
+    data = await sanitize_request(uncleaned_data)
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} updating user with ID {user_id} using data: {data}")
     result: Dict[str, Any] = await account_controller.update_user(user_id, data)
@@ -99,7 +100,8 @@ async def get_user_by_id(user_id: int) -> tuple[Dict[str, Any], int]:
 @require_access(minimum_role="executive")
 async def verify_user() -> tuple[Dict[str, Any], int]:
     """Update a user's role by user ID."""
-    data: Dict[str, Any] = await request.get_json()
+    uncleaned_data = await request.get_json()
+    data = await sanitize_request(uncleaned_data)
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} mass verifying users using data: {data}")
     result: Dict[str, Any] = await account_controller.mass_verify_users(data)
@@ -110,7 +112,8 @@ async def verify_user() -> tuple[Dict[str, Any], int]:
 @require_access(minimum_role="admin")
 async def delete_users() -> tuple[Dict[str, Any], int]:
     """Delete multiple users by user ID."""
-    data: Dict[str, Any] = await request.get_json()
+    uncleaned_data = await request.get_json()
+    data = await sanitize_request(uncleaned_data)
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} mass deleting users using data: {data}")
     result: Dict[str, Any] = await account_controller.mass_delete_users(data)

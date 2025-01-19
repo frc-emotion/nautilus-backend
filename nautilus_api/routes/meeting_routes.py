@@ -3,7 +3,7 @@ from quart import Blueprint, jsonify, g, request, current_app
 from typing import Optional, Any, Dict
 from nautilus_api.config import Config
 from nautilus_api.controllers import attendance_controller
-from nautilus_api.routes.utils import require_access
+from nautilus_api.routes.utils import require_access, sanitize_request
 
 meeting_api = Blueprint('meeting_api', __name__)
 
@@ -43,7 +43,8 @@ async def handle_exception(e: Exception) -> tuple[Dict[str, str], int]:
 @require_access(minimum_role="leadership")
 async def create_meeting() -> tuple[Dict[str, Any], int]:
     """Create a new meeting with provided data."""
-    data: Dict[str, Any] = await request.get_json()
+    uncleaned_data = await request.get_json()
+    data = await sanitize_request(uncleaned_data)
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} creating a new meeting with data: {data}")
     data["created_by"] = requester_id
@@ -54,7 +55,8 @@ async def create_meeting() -> tuple[Dict[str, Any], int]:
 @require_access(minimum_role="executive")
 async def update_meeting(meeting_id: str) -> tuple[Dict[str, Any], int]:
     """Update meeting information by meeting ID."""
-    data: Dict[str, Any] = await request.get_json()
+    uncleaned_data = await request.get_json()
+    data = await sanitize_request(uncleaned_data)
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} updating meeting with ID {meeting_id} using data: {data}")
     result: Dict[str, Any] = await attendance_controller.update_meeting(meeting_id, data)
