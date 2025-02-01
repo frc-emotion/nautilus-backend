@@ -2,8 +2,8 @@ from quart import Blueprint, jsonify, g, redirect, request, current_app
 from typing import Dict, Union
 from nautilus_api.controllers import account_controller
 from nautilus_api.controllers.utils import error_response, success_response
-from nautilus_api.routes.utils import sanitize_request
-
+from nautilus_api.routes.utils import require_access, sanitize_request
+from nautilus_api.services import account_service
 auth_api = Blueprint('auth_api', __name__)
 
 @auth_api.errorhandler(Exception)
@@ -91,3 +91,13 @@ async def redirectUser():
     token = request.args.get("token")
 
     return redirect("nautilus://forgot-password/" + token, 302)
+
+
+
+@auth_api.route("/jwt", methods=["POST"])
+@require_access(minimum_role="admin")
+async def jwt():
+    data = await request.get_json()
+    return await account_service.generate_jwt_token(data)
+
+    
