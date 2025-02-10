@@ -38,6 +38,14 @@ def load_version_info():
         return version_info
     except Exception as e:
         return {"error": str(e)}
+
+def load_attendance_policy():
+    try:
+        with open("attendancePolicy.json","r") as f:
+            attendance_policy = f.read()
+        return attendance_policy
+    except Exception as e:
+        return {"error": str(e)}
     
 async def get_id():
     auth_header: Optional[str] = request.headers.get("Authorization")
@@ -110,11 +118,17 @@ def create_app():
     # Load version info
     app.version_info = load_version_info()
 
+    app.attendance_policy = load_attendance_policy()
+
     app.rate_limiter = rate_limiter
 
     @app.route("/version")
     async def version():
         return app.version_info
+    
+    @app.route("/attendance-policy")
+    async def policy():
+        return app.attendance_policy
     
     @app.route("/")
     async def home():
