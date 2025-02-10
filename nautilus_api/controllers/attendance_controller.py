@@ -144,9 +144,9 @@ async def get_all_meetings() -> Dict[str, Union[list, int]]:
 
 async def get_attendance_by_user_id(user_id: int) -> Dict[str, Union[str, int]]:
     user = await attendance_service.get_attendance_by_user_id(user_id)
-    
+
     if not user:
-        return error_response("User not found", 404)
+        return success_response("No attendance found", 204, {})
     
     return success_response("Attendance retrieved", 200, {"attendance": user})
 
