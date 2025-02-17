@@ -230,3 +230,11 @@ async def remove_manual_attendance_logs(user_id: int, hours: float, term: int, y
         )
         return result.modified_count > 0
     return False
+
+async def add_user_to_meeting(user_id: int, log_data: Dict[str, Any]) -> bool:
+    meetings_collection = await get_collection("meetings")
+    result = await meetings_collection.update_one(
+    {"_id": log_data["meeting_id"]}, 
+    {"$addToSet": {"members_logged": user_id}}
+)
+    return result.modified_count > 0
