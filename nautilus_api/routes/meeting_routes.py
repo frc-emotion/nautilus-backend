@@ -106,3 +106,11 @@ async def get_all_clean_meetings() -> tuple[Dict[str, Any], int]:
     current_app.logger.info(f"User {requester_id} fetching all meetings")
     result: Dict[str, Any] = await attendance_controller.get_all_clean_meetings()
     return jsonify(result), result.get("status", 200)
+
+@meeting_api.route("/add_user", methods=["POST"])
+@require_access(minimum_role="admin")
+async def add_user_to_meeting():
+    uncleaned_data = await request.get_json()
+    data = await sanitize_request(uncleaned_data)
+    result = await attendance_controller.add_user_to_meeting(data)
+    return jsonify(result), result.get("status", 200)

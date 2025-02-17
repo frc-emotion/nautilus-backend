@@ -47,6 +47,10 @@ class ManualAttendanceLogSchema(BaseModel):
     year: str = Field(..., description="Academic year")
     hours: float = Field(..., description="Duration of the override in hours")
 
+class ManualUserMeetingSchema(BaseModel):
+    user_id: int = Field(..., description="ID of the user")
+    attendanceLog: ManualAttendanceLogSchema = Field(..., description="Attendance log data")
+
 
 class AttendanceUserSchema(BaseModel):
     user_id: int = Field(..., description="ID of the user")

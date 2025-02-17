@@ -5,7 +5,7 @@ from nautilus_api.config import Config
 from nautilus_api.controllers.account_controller import error_response, success_response
 from nautilus_api.controllers.utils import validate_data
 import nautilus_api.services.attendance_service as attendance_service
-from nautilus_api.schemas.attendance_schema import ManualAttendanceLogSchema, MeetingSchema, AttendanceLogSchema, AttendanceUserSchema, RemoveAttendanceLogSchema, RemoveManualAttendanceSchema
+from nautilus_api.schemas.attendance_schema import ManualAttendanceLogSchema, MeetingSchema, AttendanceLogSchema, AttendanceUserSchema, RemoveAttendanceLogSchema, RemoveManualAttendanceSchema, ManualUserMeetingSchema
 from nautilus_api.schemas.utils import format_validation_error
 
 # Helper function for data validation
@@ -170,3 +170,21 @@ async def add_manual_attendance(data: Dict[str, Any]) -> Dict[str, Union[str, in
         return error_response("Failed to add manual attendance log", 500)
 
     return success_response("Manual attendance log added", 201)
+
+async def add_user_to_meeting(data):
+
+    validated_data, error = validate_data(ManualUserMeetingSchema, data, "Add Manual Attendance")
+
+    if error:
+        return validated_data
+
+    user_id = validated_data.user_id
+
+    attendance_log = validated_data.attendanceLog
+
+    success = await attendance_service.add_user_to_meeting(user_id, attendance_log.model_dump())
+
+    if not success:
+        return error_response("Failed to add user to meeting", 500)
+
+    return success_response("User added to meeting", 201)
