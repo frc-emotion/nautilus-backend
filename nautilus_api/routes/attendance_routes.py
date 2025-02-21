@@ -114,7 +114,7 @@ async def get_all_attendance() -> Any:
     return jsonify(result), result.get("status", 200)
 
 @attendance_api.route("/years", methods=["GET"])
-@require_access(minimum_role="member")
+@require_access(minimum_role="unverified")
 async def get_attendance_years() -> Any:
     """Retrieve all years with attendance logs for the authenticated user."""
     user_id: Optional[int] = g.user.get("user_id")
