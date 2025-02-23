@@ -179,9 +179,11 @@ async def add_user_to_meeting(data):
     if error:
         return validated_data
 
-    cur_user = await account_service.find_user_by_student_id(str(validated_data.user_id))
+    # cur_user = await account_service.find_user_by_student_id(str(validated_data.user_id))
 
-    user_id = cur_user["_id"]
+    # user_id = cur_user["_id"]
+
+    user_id = validated_data.user_id
 
     attendance_log = validated_data.attendanceLog
 
