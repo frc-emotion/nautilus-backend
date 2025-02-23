@@ -5,6 +5,7 @@ from nautilus_api.config import Config
 from nautilus_api.controllers.account_controller import error_response, success_response
 from nautilus_api.controllers.utils import validate_data
 import nautilus_api.services.attendance_service as attendance_service
+import nautilus_api.services.account_service as account_service
 from nautilus_api.schemas.attendance_schema import ManualAttendanceLogSchema, MeetingSchema, AttendanceLogSchema, AttendanceUserSchema, RemoveAttendanceLogSchema, RemoveManualAttendanceSchema, ManualUserMeetingSchema
 from nautilus_api.schemas.utils import format_validation_error
 
@@ -178,7 +179,9 @@ async def add_user_to_meeting(data):
     if error:
         return validated_data
 
-    user_id = validated_data.user_id
+    cur_user = await account_service.find_user_by_student_id(str(validated_data.user_id))
+
+    user_id = cur_user["_id"]
 
     attendance_log = validated_data.attendanceLog
 
