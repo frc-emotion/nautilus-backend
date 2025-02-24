@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 
 from nautilus_api.config import Config
@@ -12,6 +13,7 @@ class MeetingSchema(BaseModel):
     hours: float = Field(..., description="Duration of the meeting in hours")
     term: int = Field(..., description="Academic term of the meeting")
     year: str = Field(..., description="Academic year of the meeting")
+    dependent: Optional[int] = Field(..., description="ID of the meeting this meeting is dependent on")
 
     @field_validator("term")
     def check_term(cls, value: int) -> int:

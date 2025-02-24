@@ -1,7 +1,9 @@
+# attendance_service.py
+
 from quart import current_app
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List, Union
-from pymongo.results import UpdateResult, DeleteResult, InsertOneResult
+from pymongo.results import UpdateResult, InsertOneResult
 
 async def get_collection(collection_name: str):
     """Helper to retrieve a MongoDB collection from the current app's database."""
@@ -25,7 +27,6 @@ async def get_hours_by_user_id(user_id: int) -> int:
     # return sum(log["hours"] for log in user.get("logs", []))
 
     # Need to account for hours based on term and year. Return hours for each year and term
-
     if not user:
         return {}
 
@@ -34,6 +35,20 @@ async def get_hours_by_user_id(user_id: int) -> int:
         key = f"{log['year']}_{log['term']}"
         hours[key] = hours.get(key, 0) + log["hours"]
     return hours
+
+async def unlog_attendance(user_id: int, meeting_id: int) -> Optional[UpdateResult]:
+    """Remove a user's attendance log for a specific meeting."""
+    attendance_collection = await get_collection("attendance")
+    user = await get_attendance_by_user_id(user_id)
+
+    if user:
+        # Filter out the log with the specified meeting_id
+        user["logs"] = [log for log in user["logs"] if log["meeting_id"] != meeting_id]
+        return await attendance_collection.update_one(
+            {"_id": user_id},
+            {"$set": {"logs": user["logs"]}}
+        )
+    return None
 
 async def log_attendance(data: Dict[str, Any], user_id: int) -> Union[UpdateResult, InsertOneResult]:
     """
@@ -151,9 +166,15 @@ async def create_meeting(data: Dict[str, Any]) -> InsertOneResult:
         "members_logged": [],
         "term": data["term"],
         "year": data["year"],
-        "_id": meeting_id
+        "_id": meeting_id,
+        "parent": data.get("parent", None)  # Changed from 'dependent' to 'parent'
     }
-    return await meeting_collection.insert_one(new_meeting)
+    return await meeting_collection.insert_one(new_meeting), meeting_id
+
+async def get_child_meetings(meeting_id: int) -> List[Dict[str, Any]]:
+    """Retrieve all meetings that are children (half meetings) of a specific meeting."""
+    meeting_collection = await get_collection("meetings")
+    return await meeting_collection.find({"parent": meeting_id}).to_list(length=None)
 
 async def get_meeting_by_id(meeting_id: int) -> Optional[Dict[str, Any]]:
     """Fetch a meeting document by its unique ID."""
@@ -170,16 +191,6 @@ async def get_all_meetings() -> List[Dict[str, Any]]:
     meeting_collection = await get_collection("meetings")
     return await meeting_collection.find().to_list(length=None)
 
-# async def user_already_logged_meeting(meeting_id: str, user_id: str) -> bool:
-#     """Check if a user is already logged for a specific meeting."""
-#     meeting = await get_meeting_by_id(meeting_id)
-#     return user_id in meeting.get("members_logged", []) if meeting else False
-
-# async def user_already_logged_attendance(meeting_id: str, user_id: str) -> bool:
-#     """Check if a user has already logged attendance for a specific meeting."""
-#     user = await get_attendance_by_user_id(user_id)
-#     return any(log["meeting_id"] == meeting_id for log in user.get("logs", [])) if user else False
-
 async def user_already_logged(user_id: int, meeting_id: str) -> bool:
     """Check if a user has already logged attendance for a given meeting."""
     user = await get_attendance_by_user_id(user_id)
@@ -195,7 +206,6 @@ async def user_already_logged(user_id: int, meeting_id: str) -> bool:
 async def delete_meeting(meeting_id: int):
     """Delete a meeting by ID"""
     meeting_collection = await get_collection("meetings")
-
     return await meeting_collection.delete_one({"_id": meeting_id})
 
 async def add_manual_attendance_log(user_id: int, log_data: Dict[str, Any]) -> bool:
@@ -234,7 +244,7 @@ async def remove_manual_attendance_logs(user_id: int, hours: float, term: int, y
 async def add_user_to_meeting(user_id: int, log_data: Dict[str, Any]) -> bool:
     meetings_collection = await get_collection("meetings")
     result = await meetings_collection.update_one(
-    {"_id": log_data["meeting_id"]}, 
-    {"$addToSet": {"members_logged": user_id}}
-)
+        {"_id": log_data["meeting_id"]}, 
+        {"$addToSet": {"members_logged": user_id}}
+    )
     return result.modified_count > 0
