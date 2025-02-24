@@ -50,6 +50,20 @@ async def unlog_attendance(user_id: int, meeting_id: int) -> Optional[UpdateResu
         )
     return None
 
+async def unlog_meeting_attendance(meeting_id: int, user_id: int) -> Optional[UpdateResult]:
+    """
+    Remove the user from the members_logged array of a given meeting.
+    """
+    meetings_collection = await get_collection("meetings")
+    meeting = await meetings_collection.find_one({"_id": meeting_id})
+    if meeting and user_id in meeting.get("members_logged", []):
+        meeting["members_logged"].remove(user_id)
+        return await meetings_collection.update_one(
+            {"_id": meeting_id},
+            {"$set": {"members_logged": meeting["members_logged"]}}
+        )
+    return None
+
 async def log_attendance(data: Dict[str, Any], user_id: int) -> Union[UpdateResult, InsertOneResult]:
     """
     Log attendance for a user. If user already has attendance logs, append the new log.

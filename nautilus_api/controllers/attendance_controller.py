@@ -38,51 +38,92 @@ async def log_attendance(data: Dict[str, Any], user_id: int) -> Dict[str, Union[
         logger.warning(f"[log_attendance] Meeting not found: {validated_data.meeting_id}")
         return error_response("Meeting not found", 404)
 
+    # Time bounds check
     if not meeting["time_start"] <= validated_data.time_received <= meeting["time_end"]:
-        logger.warning(f"[log_attendance] Timestamp out of bounds for user_id={user_id}, meeting_id={meeting['_id']}")
+        logger.warning(
+            f"[log_attendance] Timestamp out of bounds for user_id={user_id}, meeting_id={meeting['_id']}"
+        )
         return error_response("Timestamp out of bounds", 400)
 
+    # Already logged check
     if await attendance_service.user_already_logged(user_id, validated_data.meeting_id):
-        logger.info(f"[log_attendance] Already logged for user_id={user_id}, meeting_id={validated_data.meeting_id}")
+        logger.info(
+            f"[log_attendance] Already logged for user_id={user_id}, meeting_id={validated_data.meeting_id}"
+        )
         return error_response("Already logged", 409)
-    
-    # Check if the meeting is a child meeting (has a parent)
+
+    # 1) If this is a child meeting, unlog the parent if necessary
     if meeting["parent"]:
         logger.info(f"[log_attendance] Meeting {meeting['_id']} is child of {meeting['parent']}. Checking parent logs.")
         parent_meeting = await attendance_service.get_meeting_by_id(meeting["parent"])
         if not parent_meeting:
             logger.warning(f"[log_attendance] Parent meeting not found for child meeting {meeting['_id']}")
             return error_response("Parent meeting not found", 404)
-        
+
         if await attendance_service.user_already_logged(user_id, parent_meeting["_id"]):
             logger.info(f"[log_attendance] Unlogging parent meeting {parent_meeting['_id']} for user_id={user_id}")
-            if not await attendance_service.unlog_attendance(user_id, parent_meeting["_id"]):
-                logger.error(f"[log_attendance] Unlog failed for parent meeting {parent_meeting['_id']}, user_id={user_id}")
+            # Remove user from attendance logs
+            unlog_att = await attendance_service.unlog_attendance(user_id, parent_meeting["_id"])
+            if not unlog_att:
+                logger.error(
+                    f"[log_attendance] Unlog failed for parent meeting {parent_meeting['_id']}, user_id={user_id}"
+                )
                 return error_response("Unlog failed", 500)
+            # Also remove user from parent meeting's members_logged
+            unlog_meeting_att = await attendance_service.unlog_meeting_attendance(parent_meeting["_id"], user_id)
+            # unlog_meeting_att can be None if user wasn't in members_logged, but that’s non‐fatal
 
+    # 2) Otherwise, if this is a parent meeting, unlog the child if necessary
     else:
-        # Look for child meetings
         logger.info(f"[log_attendance] Meeting {meeting['_id']} is parent. Checking child logs.")
-        child_meetings = await attendance_service.get_child_meetings(validated_data.meeting_id)
+        child_meetings = await attendance_service.get_child_meetings(meeting["_id"])
         for child_meeting in child_meetings:
             if await attendance_service.user_already_logged(user_id, child_meeting["_id"]):
                 logger.info(f"[log_attendance] Unlogging child meeting {child_meeting['_id']} for user_id={user_id}")
-                if not await attendance_service.unlog_attendance(user_id, child_meeting["_id"]):
-                    logger.error(f"[log_attendance] Unlog failed for child meeting {child_meeting['_id']}, user_id={user_id}")
+                unlog_att = await attendance_service.unlog_attendance(user_id, child_meeting["_id"])
+                if not unlog_att:
+                    logger.error(
+                        f"[log_attendance] Unlog failed for child meeting {child_meeting['_id']}, user_id={user_id}"
+                    )
                     return error_response("Unlog failed", 500)
+                # Also remove user from child meeting's members_logged
+                unlog_meeting_att = await attendance_service.unlog_meeting_attendance(child_meeting["_id"], user_id)
                 break
 
+    # 3) Now log attendance in user’s logs
     if not await attendance_service.log_attendance(validated_data.model_dump(exclude_unset=True), user_id):
-        logger.error(f"[log_attendance] Log attendance failed for user_id={user_id}, meeting_id={validated_data.meeting_id}")
+        logger.error(
+            f"[log_attendance] Log attendance failed for user_id={user_id}, meeting_id={validated_data.meeting_id}"
+        )
         return error_response("Log attendance failed", 500)
-    
-    if not await attendance_service.update_meeting_attendance(validated_data.meeting_id, user_id):
-        logger.error(f"[log_attendance] Meeting update failed for meeting_id={validated_data.meeting_id}, user_id={user_id}")
-        return error_response("Meeting update failed", 500)
+
+    # 4) Update the meeting’s own members_logged array (non‐fatal if no changes)
+    update_result = await attendance_service.update_meeting_attendance(validated_data.meeting_id, user_id)
+    if update_result is None:
+        # Possibly user was already in members_logged or meeting doesn't exist
+        existing_meeting = await attendance_service.get_meeting_by_id(validated_data.meeting_id)
+        if not existing_meeting:
+            logger.error(
+                f"[log_attendance] Meeting update failed (meeting not found) for meeting_id={validated_data.meeting_id}, user_id={user_id}"
+            )
+            return error_response("Meeting update failed", 500)
+        else:
+            logger.info(
+                f"[log_attendance] No update needed (user already in members_logged) for meeting_id={validated_data.meeting_id}"
+            )
+    else:
+        # If update_result is not None, you can check modified_count:
+        if update_result.modified_count == 0:
+            logger.info(
+                f"[log_attendance] No changes made to members_logged for meeting_id={validated_data.meeting_id}"
+            )
+        else:
+            logger.info(
+                f"[log_attendance] Successfully updated members_logged for meeting_id={validated_data.meeting_id}"
+            )
 
     logger.info(f"[log_attendance] Success - user_id={user_id}, meeting_id={validated_data.meeting_id}")
     return success_response("Attendance logged", 201)
-
 # Function to get total attendance hours for a user
 async def get_attendance_hours(user_id: int) -> Dict[str, Union[int, str]]:
     logger = current_app.logger
