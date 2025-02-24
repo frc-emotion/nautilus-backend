@@ -13,7 +13,7 @@ class MeetingSchema(BaseModel):
     hours: float = Field(..., description="Duration of the meeting in hours")
     term: int = Field(..., description="Academic term of the meeting")
     year: str = Field(..., description="Academic year of the meeting")
-    dependent: Optional[int] = Field(..., default=None, description="ID of the meeting this meeting is dependent on")
+    dependent: int = Field(..., default=None, description="ID of the meeting this meeting is dependent on")
 
     @field_validator("term")
     def check_term(cls, value: int) -> int:
