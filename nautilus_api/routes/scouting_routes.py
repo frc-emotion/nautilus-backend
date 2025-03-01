@@ -1,3 +1,4 @@
+import json
 import jwt
 from quart import Blueprint, jsonify, g, request, current_app
 from typing import Optional, Any, Dict
@@ -41,12 +42,21 @@ async def handle_exception(e: Exception) -> tuple[Dict[str, str], int]:
 
 @scouting_api.route("/form", methods=["POST"])
 @require_access(minimum_role="member")
-async def create_meeting() -> tuple[Dict[str, Any], int]:
+async def scoutnig_form() -> tuple[Dict[str, Any], int]:
     """Create a new meeting with provided data."""
     uncleaned_data = await request.get_json()
     data = await sanitize_request(uncleaned_data)
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} submitting a new scouting form with data: {data}")
+    await scouting_controller.submit_data(data)
     return {"yes":"yes"}, 200
-    result: Dict[str, Any] = await attendance_controller.create_meeting(data)
-    return jsonify(result), result.get("status", 200)
+
+def load_competitions():
+    with open("competitions.json", "r") as file:
+        return json.load(file)
+
+@scouting_api.route("competitions", methods=["GET"])
+@require_access(minimum_role="member")
+async def get_competitions() -> tuple[Dict[str, Any], int]:
+    """Yurrr."""
+    return load_competitions()
