@@ -87,6 +87,7 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
 
     data["first_name"] = data["first_name"].title()
     data["last_name"] = data["last_name"].title()
+    data["email"] = data["email"].lower()
 
     user_data = validated_data.model_dump(exclude_unset=True)
     user_data.update(
@@ -111,6 +112,8 @@ async def login_user(data: Dict[str, Any]) -> Dict[str, Any]:
     
     if error:
         return validated_data
+
+    validated_data["email"] = validated_data["email"].lower()
 
     user = await account_service.find_user_by_email(validated_data.email)
     
