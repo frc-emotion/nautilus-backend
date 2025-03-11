@@ -54,5 +54,8 @@ class Config:
     API_URL: str = "http://localhost:7001" if ENVIRONMENT == "dev" else ("https://staging.team2658.org" if ENVIRONMENT == "stage" else "https://api.team2658.org")
 
     DISCORD_WEBHOOK: str = os.getenv("DISCORD_WEBHOOK", "")
+
+    APP_MIGRATION_MEETING: str = os.getenv("APP_MIGRATION_MEETING", "")
+    APP_MIGRATION_LEAD: str = os.getenv("APP_MIGRATION_LEAD", "")
     
     
