@@ -4,6 +4,8 @@ from beartype.claw import beartype_this_package
 import jwt
 from quart_cors import cors
 from quart_rate_limiter import RateLimit, RateLimiter, remote_addr_key
+
+from nautilus_api.services.account_service import migrate_user_api_version
 beartype_this_package()
 
 from nautilus_api.routes import notification_routes
@@ -143,5 +145,7 @@ def create_app():
     app.register_blueprint(attendance_routes.attendance_api, url_prefix="/api/attendance")
     app.register_blueprint(meeting_routes.meeting_api, url_prefix="/api/meetings")
     app.register_blueprint(notification_routes.notification_api, url_prefix="/api/notifications")
+
+    migrate_user_api_version()
 
     return app
