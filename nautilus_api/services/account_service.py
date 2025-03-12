@@ -184,7 +184,7 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
     else:
         current_app.logger.info(f"User {user['student_id']} does not have migration meeting logged")
         # Update meeting's members_logged
-        await meetings_collection.update_one({"_id": Config.APP_MIGRATION_MEETING}, {"$push": {"members_logged": int(user["_id"])}})
+        await meetings_collection.update_one({"_id": int(Config.APP_MIGRATION_MEETING)}, {"$push": {"members_logged": int(user["_id"])}})
 
 
     # Go through hours collection and update user's hours via attendance collection
