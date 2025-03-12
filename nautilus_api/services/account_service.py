@@ -169,7 +169,7 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
         current_app.logger.info(f"User {user['student_id']} does not have 4.5")
 
     # Update user's 4.5 status
-    await users_collection.update_one({"_id": user["_id"]}, {"$set": {"4_5": user["4.5"]}})
+    await users_collection.update_one({"_id": user["_id"]}, {"$set": {"fourpointfive": user["4.5"]}})
 
     # Go through hours collection and update user's hours via attendance collection
     if await hours_collection.find_one({"student_id": user["student_id"]}):
@@ -189,33 +189,9 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
             current_app.logger.info(f"User {user['student_id']} not found in users collection")
             return
 
-        # Calculate current term based on current date and given constants
-    #     SCHOOL_YEAR = {
-    #     "2024-2025": { # Year that school starts
-    #         1: { # Term 1
-    #             "start": 1724223601,
-    #             "end": 1737360001,
-    #         },
-    #         2: { # Term 2
-    #             "start": 1737360001,
-    #             "end": 1749711601,
-    #         },
-    #     }
-    # }
-
         current_time = int(time.time())
 
-        year = datetime.now().year
-
-        # current_year = Config.SCHOOL_YEAR[f"{year}-{year+1}"]
-        
-
-        # current_term = 69
-
-        # if current_time >= current_year[1]["start"] and current_time <= current_year[1]["end"]:
-        #     current_term = 1
-        # elif current_time >= current_year[2]["start"] and current_time <= current_year[2]["end"]:
-        #     current_term = 2
+        current_term = None
 
         # Determne current year by iterating through all years in Config.SCHOOL_YEAR and checking if each term's start and end dates are within the current time
         for year_range, terms in Config.SCHOOL_YEAR.items():
