@@ -177,9 +177,17 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
 
         hours = await hours_collection.find_one({"student_id": user["student_id"]})
 
+        if not hours:
+            current_app.logger.info(f"User {user['student_id']} not found in hours collection")
+            return
+
         current_app.logger.info(f"User {user['student_id']} has {hours['hours']} hours")
 
-        user_id = await users_collection.find_one({"student_id": user["student_id"]})["_id"]
+        user_id = await users_collection.find_one({"student_id": user["student_id"]})
+
+        if not user_id:
+            current_app.logger.info(f"User {user['student_id']} not found in users collection")
+            return
 
         # Calculate current term based on current date and given constants
     #     SCHOOL_YEAR = {
@@ -221,14 +229,14 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
         }
 
         # Check if user already has hours in attendance collection
-        if await attendance_collection.find_one({"_id": user_id}):
+        if await attendance_collection.find_one({"_id": user_id["_id"]}):
             current_app.logger.info(f"User {user['student_id']} already has hours in attendance collection")
             # Insert in logs array
-            await attendance_collection.update_one({"_id": user_id}, {"$push": {"logs": toInsert}})
+            await attendance_collection.update_one({"_id": user_id["_id"]}, {"$push": {"logs": toInsert}})
         else:
             current_app.logger.info(f"User {user['student_id']} does not have hours in attendance collection")
             # Create new document
-            await attendance_collection.insert_one({"_id": user_id, "logs": [toInsert]})
+            await attendance_collection.insert_one({"_id": user_id["_id"], "logs": [toInsert]})
 
 
         # Update user's hours in attendance collection
