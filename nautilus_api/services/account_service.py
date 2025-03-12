@@ -180,7 +180,6 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
     
     if user["student_id"] in meeting["members_logged"]:
         current_app.logger.info(f"User {user['student_id']} already has migration meeting logged")
-        return
     else:
         current_app.logger.info(f"User {user['student_id']} does not have migration meeting logged")
         # Update meeting's members_logged
