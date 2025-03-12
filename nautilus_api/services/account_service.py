@@ -156,8 +156,8 @@ async def delete_user_attendance(user_id:int)->DeleteResult:
 async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5, attendance_collection, user) -> None:
     current_app.logger.info(f"Migrating user {user['student_id']} from API version 1.0 to 1.1")
 
-    # Add 4.5 field to user
-    user["api_version"] = "1.1"
+    # Update user's API version
+    await users_collection.update_one({"_id": user["_id"]}, {"$set": {"api_version": "1.1"}})
 
     # Check 4_5 collection
 
@@ -167,6 +167,9 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
     else:
         user["4.5"] = False
         current_app.logger.info(f"User {user['student_id']} does not have 4.5")
+
+    # Update user's 4.5 status
+    await users_collection.update_one({"_id": user["_id"]}, {"$set": {"4.5": user["4.5"]}})
 
     # Go through hours collection and update user's hours via attendance collection
     if await hours_collection.find_one({"student_id": user["student_id"]}):
