@@ -257,4 +257,4 @@ async def migrate_user_api_version() -> UpdateResult:
 
     for user in outdated_users:
         if user["api_version"] == "1.0":
-            await migrate_1_0_to_1_1(account_collection, await get_collection("hours"), await get_collection("4_5"), await get_collection("attendance"), user)
+            await migrate_1_0_to_1_1(account_collection, await get_collection("hours"), await get_collection("4.5"), await get_collection("attendance"), user)
