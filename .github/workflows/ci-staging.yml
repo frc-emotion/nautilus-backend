@@ -24,6 +24,8 @@ jobs:
       MAILGUN_ENDPOINT: ${{ secrets.MAILGUN_ENDPOINT_STAGING }}
       MAILGUN_FROM_EMAIL: ${{ secrets.MAILGUN_FROM_EMAIL_STAGING }}
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      APP_MIGRATION_LEAD: ${{ secrets.APP_MIGRATION_LEAD_STAGING }}
+      APP_MIGRATION_MEETING: ${{ secrets.APP_MIGRATION_MEETING_STAGING }}
 
     steps:
       - name: Checkout
@@ -66,5 +68,5 @@ jobs:
             docker pull ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
             docker stop staging-nautilus-backend || true
             docker rm staging-nautilus-backend || true
-            docker run -d --name staging-nautilus-backend -e DISCORD_WEBHOOK="${{ env.DISCORD_WEBHOOK }}" -e DB_NAME="${{ env.DB_NAME }}" -e MONGO_URI="${{ env.MONGO_URI }}" -e ENVIRONMENT="${{ env.ENVIRONMENT }}" -e EXPO_TOKEN="${{ env.EXPO_TOKEN }}" -e JWT_SECRET="${{ env.JWT_SECRET }}" -e MAILGUN_API_KEY="${{ env.MAILGUN_API_KEY }}" -e MAILGUN_ENDPOINT="${{ env.MAILGUN_ENDPOINT }}" -e MAILGUN_FROM_EMAIL="${{ env.MAILGUN_FROM_EMAIL }}" -p 7001:7001 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
+            docker run -d --name staging-nautilus-backend -e APP_MIGRATION_MEETING="${{ env.APP_MIGRATION_MEETING }}" -e APP_MIGRATION_LEAD="${{ env.APP_MIGRATION_LEAD }}" -e DISCORD_WEBHOOK="${{ env.DISCORD_WEBHOOK }}" -e DB_NAME="${{ env.DB_NAME }}" -e MONGO_URI="${{ env.MONGO_URI }}" -e ENVIRONMENT="${{ env.ENVIRONMENT }}" -e EXPO_TOKEN="${{ env.EXPO_TOKEN }}" -e JWT_SECRET="${{ env.JWT_SECRET }}" -e MAILGUN_API_KEY="${{ env.MAILGUN_API_KEY }}" -e MAILGUN_ENDPOINT="${{ env.MAILGUN_ENDPOINT }}" -e MAILGUN_FROM_EMAIL="${{ env.MAILGUN_FROM_EMAIL }}" -p 7001:7001 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
             docker logout ghcr.io

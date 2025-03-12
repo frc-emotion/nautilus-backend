@@ -18,7 +18,7 @@ class Config:
     DB_NAME: str = os.getenv("DB_NAME", "nautilus-dev")
     
     # API versioning
-    API_VERSION: str = "1.0"
+    API_VERSION: str = "1.1"
     
     # JWT expiry duration in days
     JWT_EXPIRY_DAYS: int = int(os.getenv("JWT_EXPIRY_DAYS", "3"))
@@ -56,6 +56,7 @@ class Config:
     DISCORD_WEBHOOK: str = os.getenv("DISCORD_WEBHOOK", "")
 
     APP_MIGRATION_MEETING: str = os.getenv("APP_MIGRATION_MEETING", "")
+    
     APP_MIGRATION_LEAD: str = os.getenv("APP_MIGRATION_LEAD", "")
     
     
