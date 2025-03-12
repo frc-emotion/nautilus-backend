@@ -207,15 +207,29 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
 
         year = datetime.now().year
 
-        current_year = Config.SCHOOL_YEAR[f"{year}-{year+1}"]
+        # current_year = Config.SCHOOL_YEAR[f"{year}-{year+1}"]
+        
 
-        current_term = 69
+        # current_term = 69
 
-        if current_time >= current_year[1]["start"] and current_time <= current_year[1]["end"]:
-            current_term = 1
-        elif current_time >= current_year[2]["start"] and current_time <= current_year[2]["end"]:
-            current_term = 2
+        # if current_time >= current_year[1]["start"] and current_time <= current_year[1]["end"]:
+        #     current_term = 1
+        # elif current_time >= current_year[2]["start"] and current_time <= current_year[2]["end"]:
+        #     current_term = 2
+
+        # Determne current year by iterating through all years in Config.SCHOOL_YEAR and checking if each term's start and end dates are within the current time
+        for year_range, terms in Config.SCHOOL_YEAR.items():
+            for term, dates in terms.items():
+                if current_time >= dates["start"] and current_time <= dates["end"]:
+                    current_term = term
+                    current_year = year_range
+                    break
             
+        if not current_term:
+            current_app.logger.error("Could not determine current term")
+            return
+        
+        current_app.logger.info(f"Current term: {current_term}, Current year: {current_year}")
 
         # Add hours to user
         toInsert = {
@@ -225,7 +239,7 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
             "flag": False,
             "hours": hours["hours"],
             "term": current_term,
-            "year": f"{year}-{year+1}"
+            "year": current_year
         }
 
         # Check if user already has hours in attendance collection
