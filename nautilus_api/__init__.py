@@ -138,6 +138,11 @@ def create_app():
             return ":)"
         
         return "greetings curious one"
+    
+    @app.route("/migrate")
+    async def migrate():
+        await migrate_user_api_version()
+        return "started"
 
     # Register API routes
     app.register_blueprint(account_routes.account_api, url_prefix="/api/account")
@@ -145,7 +150,5 @@ def create_app():
     app.register_blueprint(attendance_routes.attendance_api, url_prefix="/api/attendance")
     app.register_blueprint(meeting_routes.meeting_api, url_prefix="/api/meetings")
     app.register_blueprint(notification_routes.notification_api, url_prefix="/api/notifications")
-
-    migrate_user_api_version()
 
     return app
