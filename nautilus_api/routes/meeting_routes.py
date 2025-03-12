@@ -40,7 +40,7 @@ async def handle_exception(e: Exception) -> tuple[Dict[str, str], int]:
     return jsonify({"error": "An unexpected error occurred. Please report this immediately!"}), 500
 
 @meeting_api.route("/", methods=["POST"])
-@require_access(minimum_role="leadership")
+@require_access(minimum_role="executive")
 async def create_meeting() -> tuple[Dict[str, Any], int]:
     """Create a new meeting with provided data."""
     uncleaned_data = await request.get_json()
