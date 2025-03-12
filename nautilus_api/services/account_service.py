@@ -182,14 +182,14 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
         current_app.logger.info(f"User {user['student_id']} already has migration meeting logged")
     else:
         current_app.logger.info(f"User {user['student_id']} does not have migration meeting logged")
-        # Update meeting's members_logged
-        await meetings_collection.update_one({"_id": int(Config.APP_MIGRATION_MEETING)}, {"$push": {"members_logged": int(user["_id"])}})
-
+        # Update meeting's members_logged only if user is not already in the list
+        await meetings_collection.update_one({"_id": int(Config.APP_MIGRATION_MEETING)}, {"$addToSet": {"members_logged": int(user["_id"])}})
 
     # Go through hours collection and update user's hours via attendance collection
     hours = await hours_collection.find_one({"student_id": user["student_id"]})
     if hours:
         current_app.logger.info(f"User {user['student_id']} has hours")
+
         if not hours:
             current_app.logger.info(f"User {user['student_id']} not found in hours collection")
             return
