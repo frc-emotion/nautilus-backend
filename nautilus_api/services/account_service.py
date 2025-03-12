@@ -153,7 +153,7 @@ async def delete_user_attendance(user_id:int)->DeleteResult:
     attendance_collection=await get_collection("attendance")
     return await attendance_collection.delete_one({"_id":user_id})
 
-async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5, attendance_collection, user) -> None:
+async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5, attendance_collection, meetings_collection, user) -> None:
     current_app.logger.info(f"Migrating user {user['student_id']} from API version 1.0 to 1.1")
 
     # Update user's API version
@@ -170,6 +170,22 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
 
     # Update user's 4.5 status
     await users_collection.update_one({"_id": user["_id"]}, {"$set": {"fourpointfive": user["4.5"]}})
+
+    # Check if user student_id exists in meeting users logged by searching foro _id in meetings collection
+    meeting = await meetings_collection.find_one({"_id": Config.APP_MIGRATION_MEETING})
+
+    if not meeting:
+        current_app.logger.info(f"Meeting {Config.APP_MIGRATION_MEETING} not found")
+        return
+    
+    if user["student_id"] in meeting["members_logged"]:
+        current_app.logger.info(f"User {user['student_id']} already has migration meeting logged")
+        return
+    else:
+        current_app.logger.info(f"User {user['student_id']} does not have migration meeting logged")
+        # Update meeting's members_logged
+        await meetings_collection.update_one({"_id": Config.APP_MIGRATION_MEETING}, {"$push": {"members_logged": user["student_id"]}})
+
 
     # Go through hours collection and update user's hours via attendance collection
     if await hours_collection.find_one({"student_id": user["student_id"]}):
@@ -258,4 +274,4 @@ async def migrate_user_api_version() -> UpdateResult:
 
     for user in outdated_users:
         if user["api_version"] == "1.0":
-            await migrate_1_0_to_1_1(account_collection, await get_collection("hours"), await get_collection("4.5"), await get_collection("attendance"), user)
+            await migrate_1_0_to_1_1(account_collection, await get_collection("hours"), await get_collection("4.5"), await get_collection("attendance"), await get_collection("meetings"), user)
