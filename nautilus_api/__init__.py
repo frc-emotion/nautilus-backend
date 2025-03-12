@@ -4,6 +4,7 @@ from beartype.claw import beartype_this_package
 import jwt
 from quart_cors import cors
 from quart_rate_limiter import RateLimit, RateLimiter, remote_addr_key
+import traceback
 
 from nautilus_api.services.account_service import migrate_user_api_version
 beartype_this_package()
@@ -141,8 +142,15 @@ def create_app():
     
     @app.route("/migrate")
     async def migrate():
-        await migrate_user_api_version()
-        return "started"
+        
+        try:
+            await migrate_user_api_version()
+        except Exception as e:
+            err = traceback.print_exc()
+            current_app.logger.error(err)
+            return "if you see this it means arshan can't code"
+        
+        return "if you see this it means it worked"
 
     # Register API routes
     app.register_blueprint(account_routes.account_api, url_prefix="/api/account")

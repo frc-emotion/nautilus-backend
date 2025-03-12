@@ -233,8 +233,8 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
 
         # Add hours to user
         toInsert = {
-            "meeting_id": Config.APP_MIGRATION_MEETING,
-            "lead_id": Config.APP_MIGRATION_LEAD,
+            "meeting_id": int(Config.APP_MIGRATION_MEETING),
+            "lead_id": int(Config.APP_MIGRATION_LEAD),
             "time_received": current_time,
             "flag": False,
             "hours": hours["hours"],
