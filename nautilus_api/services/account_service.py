@@ -188,11 +188,9 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
 
 
     # Go through hours collection and update user's hours via attendance collection
-    if await hours_collection.find_one({"student_id": user["student_id"]}):
+    hours = await hours_collection.find_one({"student_id": user["student_id"]})
+    if hours:
         current_app.logger.info(f"User {user['student_id']} has hours")
-
-        hours = await hours_collection.find_one({"student_id": user["student_id"]})
-
         if not hours:
             current_app.logger.info(f"User {user['student_id']} not found in hours collection")
             return
