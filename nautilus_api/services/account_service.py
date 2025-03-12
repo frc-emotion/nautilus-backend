@@ -179,7 +179,7 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
 
         current_app.logger.info(f"User {user['student_id']} has {hours['hours']} hours")
 
-        user_id = users_collection.find_one({"student_id": user["student_id"]})["_id"]
+        user_id = await users_collection.find_one({"student_id": user["student_id"]})["_id"]
 
         # Calculate current term based on current date and given constants
     #     SCHOOL_YEAR = {
