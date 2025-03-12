@@ -169,7 +169,7 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
         current_app.logger.info(f"User {user['student_id']} does not have 4.5")
 
     # Update user's 4.5 status
-    await users_collection.update_one({"_id": user["_id"]}, {"$set": {"4.5": user["4.5"]}})
+    await users_collection.update_one({"_id": user["_id"]}, {"$set": {"4_5": user["4.5"]}})
 
     # Go through hours collection and update user's hours via attendance collection
     if await hours_collection.find_one({"student_id": user["student_id"]}):
