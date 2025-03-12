@@ -91,7 +91,7 @@ async def register_user(data: Dict[str, Any]) -> Dict[str, Any]:
     user_data = validated_data.model_dump(exclude_unset=True)
     user_data.update(
         {
-            "api_version": Config.API_VERSION, 
+            "api_version": "1.0", 
             "role": "unverified", 
             "password": generate_password_hash(validated_data.password),
             "created_at": datetime.now(timezone.utc).timestamp(),
