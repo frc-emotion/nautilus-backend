@@ -1,5 +1,5 @@
 [
-    { "label": "Port Hueneme Practice 2025", "value": "ph-practice-2025" },
-    { "label": "Port Hueneme Quals 2025", "value": "ph-quals-2025" },
-    { "label": "Port Hueneme Playoffs 2025", "value": "ph-playoffs-2025"}
-  ]
+  { "label": "SDR Practice 2025", "value": "sdr-practice-2025" },
+  { "label": "SDR Quals 2025", "value": "sdr-quals-2025" },
+  { "label": "SDR Playoffs 2025", "value": "sdr-playoffs-2025"}
+]
