@@ -81,3 +81,30 @@ async def send_contact_form():
     current_app.logger.info("Trying to send ")
     result = await notification_controller.send_contact_form(data)
     return jsonify({"status": result.status_code, "message": "Webhook sent"})
+
+@require_access(minimum_role="executive")
+@notification_api.route("/add_noti", methods = ["POST"])
+async def add_noti():
+    data = await request.get_json()
+    # update_value = data.get("update")
+    result = await notification_controller.add_noti(data)
+    return jsonify({"status": result["status"], "message": result["message"]})
+
+@require_access(minimum_role="executive")
+@notification_api.route("/update_noti", methods = ["PUT"])
+async def update_noti():
+    data:dict[str,Any] = await request.get_json()
+    result = await notification_controller.update_noti(data)
+    return jsonify({"status": result["status"], "message": result["message"]})
+
+@require_access(minimum_role="executive")
+@notification_api.route("/delete_noti", methods = ["DELETE"])
+async def delete_noti():
+    data:dict[str,Any] = await request.get_json()
+    result = await notification_controller.remove_noti(data)
+    return jsonify({"status": result["status"], "message": result["message"]})
+
+@notification_api.route("/updates", methods = ["GET"])
+async def get_updates():
+    result = await notification_controller.get_updates()
+    return jsonify({"status": result["status"], "updates": result["data"]["updates"]})

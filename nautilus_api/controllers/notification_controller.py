@@ -10,7 +10,7 @@ from exponent_server_sdk_async import (
 from quart import current_app
 from nautilus_api.config import Config
 from nautilus_api.controllers.utils import error_response, success_response, validate_data
-from nautilus_api.schemas.notification_schema import TriggerNotificationSchema
+from nautilus_api.schemas.notification_schema import InitialNotificationSchema, RemoveNotificationSchema, TriggerNotificationSchema, UpdateNotificationSchema
 from nautilus_api.services import notification_service
 
 async def update_notification_token(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -178,4 +178,43 @@ async def send_contact_form(data):
 
     return response
 
+async def add_noti(noti_data):
+    validated_data, error = validate_data(InitialNotificationSchema, noti_data)
+    validated_data=validated_data.model_dump()
+    if error:
+        return validated_data
+    result = await notification_service.add_notification(validated_data)
+    if not result.inserted_id:
+        return error_response("Not found or unchanged", 404)
+    # if not (result := await notification_service.add_notification(validated_data)).modified_count:
+    #     return error_response("Not found or unchanged", 404)
+    return success_response("Notification added", 200, {"update": validated_data["update"]})
+
+async def remove_noti(noti_data):
+    validated_data, error = validate_data(RemoveNotificationSchema, noti_data)
+    validated_data = validated_data.model_dump()
+    if error:
+        return validated_data
+    if not (result := await notification_service.update_active_status(validated_data)).modified_count:
+        return error_response("Not found or unchanged", 404)
+    return success_response("Notification deleted", 200, {"id of removed update": validated_data["id"]})
+
+async def update_noti(noti_data):
+    validated_data, error = validate_data(UpdateNotificationSchema, noti_data)
+    validated_data = validated_data.model_dump()
+    if error:
+        return validated_data
+    if not (result := await notification_service.update_notification(validated_data)).modified_count:
+        return error_response("Not found or unchanged", 404)
+    return success_response("Notification updated", 200, {"update": validated_data["update"]})
+
+async def get_updates():
+
+    updates = await notification_service.get_all_updates()
     
+    if len(updates)<1:
+        return error_response("No new updates", 503, {"updates": []})
+    
+    updates = [[item["update"],item["_id"]] for item in updates]
+
+    return success_response("Updates have arrived", 200, {"updates": updates})
