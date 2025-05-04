@@ -13,7 +13,7 @@ from nautilus_api.routes import notification_routes, scouting_routes
 import httpx
 from quart import Quart, current_app, g, request
 from motor.motor_asyncio import AsyncIOMotorClient
-from .routes import account_routes, auth_routes, attendance_routes, meeting_routes
+from .routes import account_routes, auth_routes, attendance_routes, meeting_routes, pitscouting_routes
 from .config import Config
 import os
 from exponent_server_sdk_async import (
