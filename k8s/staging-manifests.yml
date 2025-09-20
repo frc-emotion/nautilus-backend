@@ -13,6 +13,8 @@ spec:
       labels:
         app: nautilus-backend
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
       - name: nautilus-backend
         image: ghcr.io/frc-emotion/staging-nautilus-backend:${GITHUB_SHA}
