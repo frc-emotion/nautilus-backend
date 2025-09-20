@@ -89,5 +89,5 @@ jobs:
             APP_MIGRATION_MEETING: "${{ env.APP_MIGRATION_MEETING }}"
           EOF
 
-          # Apply Kubernetes manifests from secret
-          echo "${{ secrets.KUBE_MANIFESTS }}" | base64 -d | GITHUB_SHA=${{ github.sha }} envsubst | kubectl apply -f -
+          # Apply Kubernetes manifests from repository
+          cat k8s/staging-manifests.yml | GITHUB_SHA=${{ github.sha }} envsubst | kubectl apply -f -
