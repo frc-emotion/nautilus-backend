@@ -53,20 +53,35 @@ jobs:
           file: ./Dockerfile.staging
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
+          tags: ghcr.io/frc-emotion/staging-nautilus-backend:${{ github.sha }}
 
-      - name: Connect to server and trigger redeploy of docker containers
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
         with:
-          host: "staging.team2658.org"
-          username: "root"
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          script: |
-            docker logout ghcr.io
-            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-            docker pull ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
-            docker stop staging-nautilus-backend || true
-            docker rm staging-nautilus-backend || true
-            docker run -d --name staging-nautilus-backend -e APP_MIGRATION_MEETING="${{ env.APP_MIGRATION_MEETING }}" -e APP_MIGRATION_LEAD="${{ env.APP_MIGRATION_LEAD }}" -e DISCORD_WEBHOOK="${{ env.DISCORD_WEBHOOK }}" -e DB_NAME="${{ env.DB_NAME }}" -e MONGO_URI="${{ env.MONGO_URI }}" -e ENVIRONMENT="${{ env.ENVIRONMENT }}" -e EXPO_TOKEN="${{ env.EXPO_TOKEN }}" -e JWT_SECRET="${{ env.JWT_SECRET }}" -e MAILGUN_API_KEY="${{ env.MAILGUN_API_KEY }}" -e MAILGUN_ENDPOINT="${{ env.MAILGUN_ENDPOINT }}" -e MAILGUN_FROM_EMAIL="${{ env.MAILGUN_FROM_EMAIL }}" -p 7001:7001 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
-            docker logout ghcr.io
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Save DigitalOcean kubeconfig
+        run: doctl kubernetes cluster kubeconfig save ${{ secrets.CLUSTER_NAME }}
+
+      - name: Deploy to DigitalOcean Kubernetes
+        run: |
+          # Create namespace if it doesn't exist
+          kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Create configmap for environment variables
+          kubectl create configmap nautilus-config -n staging \
+            --from-literal=ENVIRONMENT=${{ env.ENVIRONMENT }} \
+            --from-literal=DB_NAME=${{ env.DB_NAME }} \
+            --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
+            --from-literal=EXPO_TOKEN=${{ env.EXPO_TOKEN }} \
+            --from-literal=JWT_SECRET=${{ env.JWT_SECRET }} \
+            --from-literal=MAILGUN_API_KEY=${{ env.MAILGUN_API_KEY }} \
+            --from-literal=MAILGUN_ENDPOINT=${{ env.MAILGUN_ENDPOINT }} \
+            --from-literal=MAILGUN_FROM_EMAIL=${{ env.MAILGUN_FROM_EMAIL }} \
+            --from-literal=DISCORD_WEBHOOK=${{ env.DISCORD_WEBHOOK }} \
+            --from-literal=APP_MIGRATION_LEAD=${{ env.APP_MIGRATION_LEAD }} \
+            --from-literal=APP_MIGRATION_MEETING=${{ env.APP_MIGRATION_MEETING }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          # Apply Kubernetes manifests from secret
+          echo "${{ secrets.KUBE_MANIFESTS }}" | base64 -d | GITHUB_SHA=${{ github.sha }} envsubst | kubectl apply -f -
