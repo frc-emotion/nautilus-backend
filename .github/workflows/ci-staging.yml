@@ -68,6 +68,15 @@ jobs:
           # Create namespace if it doesn't exist
           kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
           
+          # Create or update GHCR secret for pulling images
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --docker-email=${{ github.actor }}@users.noreply.github.com \
+            --namespace=staging \
+            --dry-run=client -o yaml | kubectl apply -f -
+          
           # Create configmap using YAML definition
           cat <<EOF | kubectl apply -f -
           apiVersion: v1
