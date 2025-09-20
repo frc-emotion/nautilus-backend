@@ -16,4 +16,4 @@ RUN poetry install --no-interaction
 COPY . /app
 
 # Use port 7000 for production
-CMD ["hypercorn", "main:app", "-b", "0.0.0.0:7000"]
+CMD ["hypercorn", "main:app", "-b", "0.0.0.0:7001"]
