@@ -53,20 +53,50 @@ jobs:
           file: ./Dockerfile.staging
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
+          tags: ghcr.io/frc-emotion/staging-nautilus-backend:${{ github.sha }}
 
-      - name: Connect to server and trigger redeploy of docker containers
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
         with:
-          host: "staging.team2658.org"
-          username: "root"
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          script: |
-            docker logout ghcr.io
-            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-            docker pull ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
-            docker stop staging-nautilus-backend || true
-            docker rm staging-nautilus-backend || true
-            docker run -d --name staging-nautilus-backend -e APP_MIGRATION_MEETING="${{ env.APP_MIGRATION_MEETING }}" -e APP_MIGRATION_LEAD="${{ env.APP_MIGRATION_LEAD }}" -e DISCORD_WEBHOOK="${{ env.DISCORD_WEBHOOK }}" -e DB_NAME="${{ env.DB_NAME }}" -e MONGO_URI="${{ env.MONGO_URI }}" -e ENVIRONMENT="${{ env.ENVIRONMENT }}" -e EXPO_TOKEN="${{ env.EXPO_TOKEN }}" -e JWT_SECRET="${{ env.JWT_SECRET }}" -e MAILGUN_API_KEY="${{ env.MAILGUN_API_KEY }}" -e MAILGUN_ENDPOINT="${{ env.MAILGUN_ENDPOINT }}" -e MAILGUN_FROM_EMAIL="${{ env.MAILGUN_FROM_EMAIL }}" -p 7001:7001 ghcr.io/frc-emotion/staging-nautilus-backend:amd-latest
-            docker logout ghcr.io
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Save DigitalOcean kubeconfig
+        run: doctl kubernetes cluster kubeconfig save ${{ secrets.CLUSTER_NAME }}
+
+      - name: Deploy to DigitalOcean Kubernetes
+        run: |
+          # Create namespace if it doesn't exist
+          kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Create or update GHCR secret for pulling images
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --docker-email=${{ github.actor }}@users.noreply.github.com \
+            --namespace=staging \
+            --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Create configmap using YAML definition
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: nautilus-config
+            namespace: staging
+          data:
+            ENVIRONMENT: "${{ env.ENVIRONMENT }}"
+            DB_NAME: "${{ env.DB_NAME }}"
+            MONGO_URI: "${{ env.MONGO_URI }}"
+            EXPO_TOKEN: "${{ env.EXPO_TOKEN }}"
+            JWT_SECRET: "${{ env.JWT_SECRET }}"
+            MAILGUN_API_KEY: "${{ env.MAILGUN_API_KEY }}"
+            MAILGUN_ENDPOINT: "${{ env.MAILGUN_ENDPOINT }}"
+            MAILGUN_FROM_EMAIL: "${{ env.MAILGUN_FROM_EMAIL }}"
+            DISCORD_WEBHOOK: "${{ env.DISCORD_WEBHOOK }}"
+            APP_MIGRATION_LEAD: "${{ env.APP_MIGRATION_LEAD }}"
+            APP_MIGRATION_MEETING: "${{ env.APP_MIGRATION_MEETING }}"
+          EOF
+
+          # Apply Kubernetes manifests from repository
+          cat k8s/staging-manifests.yml | GITHUB_SHA=${{ github.sha }} envsubst | kubectl apply -f -

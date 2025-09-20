@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nautilus-backend
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nautilus-backend
+  template:
+    metadata:
+      labels:
+        app: nautilus-backend
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+      - name: nautilus-backend
+        image: ghcr.io/frc-emotion/staging-nautilus-backend:${GITHUB_SHA}
+        ports:
+        - containerPort: 7001
+        envFrom:
+        - configMapRef:
+            name: nautilus-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nautilus-backend
+  namespace: staging
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 7001
+    targetPort: 7001
+  selector:
+    app: nautilus-backend
