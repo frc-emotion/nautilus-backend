@@ -50,7 +50,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile.prod
           platforms: linux/amd64
           push: true
           tags: ghcr.io/frc-emotion/nautilus-backend:${{ github.sha }}
