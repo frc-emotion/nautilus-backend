@@ -51,7 +51,7 @@ class Config:
     # If dev then http://localhost:7001
     # if stage then https://staging.team2658.org
     # If prod then https://api.team2658.org
-    API_URL: str = "http://localhost:7001" if ENVIRONMENT == "dev" else ("https://staging.team2658.org" if ENVIRONMENT == "stage" else "https://api.team2658.org")
+    API_URL: str = "http://localhost:7001" if ENVIRONMENT == "dev" else ("http://staging.team2658.org" if ENVIRONMENT == "stage" else "http://api.team2658.org")
 
     DISCORD_WEBHOOK: str = os.getenv("DISCORD_WEBHOOK", "")
 
