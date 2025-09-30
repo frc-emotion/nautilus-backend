@@ -30,7 +30,7 @@ metadata:
   name: nautilus-backend
   namespace: staging
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
   - port: 7001
     targetPort: 7001
