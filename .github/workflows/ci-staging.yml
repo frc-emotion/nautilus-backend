@@ -100,3 +100,6 @@ jobs:
 
           # Apply Kubernetes manifests from repository
           cat k8s/staging-manifests.yml | GITHUB_SHA=${{ github.sha }} envsubst | kubectl apply -f -
+
+          kubectl rollout restart deployment/nautilus-backend -n production
+          kubectl rollout status deployment/nautilus-backend -n production
