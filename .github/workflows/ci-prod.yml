@@ -77,6 +77,10 @@ jobs:
             --namespace=production \
             --dry-run=client -o yaml | kubectl apply -f -
           
+          # Calculate ConfigMap hash to force pod restart when config changes
+          CONFIGMAP_HASH=$(echo -n "${{ env.MONGO_URI }}${{ env.JWT_SECRET }}${{ env.DB_NAME }}${{ env.EXPO_TOKEN }}" | sha256sum | cut -d' ' -f1)
+          echo "ConfigMap hash: $CONFIGMAP_HASH"
+          
           # Create configmap using YAML definition
           cat <<EOF | kubectl apply -f -
           apiVersion: v1
@@ -98,8 +102,8 @@ jobs:
             APP_MIGRATION_MEETING: "${{ env.APP_MIGRATION_MEETING }}"
           EOF
 
-          # Apply Kubernetes manifests from repository
-          cat k8s/production-manifests.yml | GITHUB_SHA=${{ github.sha }} envsubst | kubectl apply -f -
-
-          kubectl rollout restart deployment/nautilus-backend -n production
-          kubectl rollout status deployment/nautilus-backend -n production
+          # Apply Kubernetes manifests with ConfigMap hash annotation
+          cat k8s/production-manifests.yml | GITHUB_SHA=${{ github.sha }} CONFIGMAP_HASH=$CONFIGMAP_HASH envsubst | kubectl apply -f -
+          
+          # Wait for rollout to complete with extended timeout
+          kubectl rollout status deployment/nautilus-backend -n production --timeout=5m
