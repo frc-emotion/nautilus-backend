@@ -61,6 +61,7 @@ The server should now be running locally.
     Contains the business logic.
     - **attendance_service.py**: Functions for managing attendance.
     - **scouting_service.py**: Functions for managing scouting.
+    - **pitscouting_service.py**: Functions for managing pit scouting.
 
   - **config.py**  
     Stores app configuration settings.
