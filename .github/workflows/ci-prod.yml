@@ -102,8 +102,25 @@ jobs:
             APP_MIGRATION_MEETING: "${{ env.APP_MIGRATION_MEETING }}"
           EOF
 
-          # Apply Kubernetes manifests with ConfigMap hash annotation
-          cat k8s/production-manifests.yml | GITHUB_SHA=${{ github.sha }} CONFIGMAP_HASH=$CONFIGMAP_HASH envsubst | kubectl apply -f -
+          # Export variables for envsubst (only the ones we want to replace)
+          export GITHUB_SHA=${{ github.sha }}
+          export CONFIGMAP_HASH=$CONFIGMAP_HASH
+          
+          # Apply Kubernetes manifests with proper variable substitution
+          # Use envsubst with explicit variable list to avoid replacing unintended variables
+          envsubst '${GITHUB_SHA} ${CONFIGMAP_HASH}' < k8s/production-manifests.yml | kubectl apply -f -
+          
+          # Give Kubernetes a moment to process the deployment update
+          sleep 3
+          
+          # Force delete any pods that are stuck in Terminating state
+          TERMINATING_PODS=$(kubectl get pods -n production -l app=nautilus-backend --field-selector=status.phase=Terminating -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+          if [ ! -z "$TERMINATING_PODS" ]; then
+            echo "Force deleting terminating pods: $TERMINATING_PODS"
+            kubectl delete pods -n production -l app=nautilus-backend --grace-period=0 --force 2>/dev/null || true
+            sleep 2
+          fi
           
           # Wait for rollout to complete with extended timeout
-          kubectl rollout status deployment/nautilus-backend -n production --timeout=5m
+          echo "Waiting for deployment rollout..."
+          kubectl rollout status deployment/nautilus-backend -n production --timeout=10m
