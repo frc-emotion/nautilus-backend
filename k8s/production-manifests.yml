@@ -12,6 +12,9 @@ spec:
     metadata:
       labels:
         app: nautilus-backend
+      annotations:
+        configmap-hash: "${CONFIGMAP_HASH}"
+        deploy-sha: "${GITHUB_SHA}"
     spec:
       imagePullSecrets:
         - name: ghcr-secret
