@@ -33,7 +33,18 @@ class Config:
                 "start": 1737360001,
                 "end": 1749711601,
             },
-        }
+        },
+        "2025-2026":{ # Year that school starts 
+            1:{ # Term 1 
+                "start" : 1755102300,
+                "end" : 1768618800,
+            },
+            2: { #Term 2 
+                "start" : 1768897500,
+                "end" : 1780974000,
+            },
+            
+        },
     }
 
     ROLE_HIERARCHY = ["unverified", "member", "leadership", "executive", "advisor", "admin"]
