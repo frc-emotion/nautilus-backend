@@ -5,6 +5,8 @@ metadata:
   namespace: production
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: nautilus-backend
