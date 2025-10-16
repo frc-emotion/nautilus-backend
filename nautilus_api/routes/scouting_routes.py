@@ -59,7 +59,7 @@ async def pitscouting_form() -> tuple[Dict[str, Any], int]:
     data = await sanitize_request(uncleaned_data)
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} submitting a new pitscouting form with data: {data}")
-    await scouting.submit_data(data, "pitscouting")
+    await scouting_controller.submit_data(data, "pitscouting")
     return {"yes": "yes"}, 200
 
 
