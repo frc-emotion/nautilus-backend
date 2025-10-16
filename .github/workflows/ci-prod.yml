@@ -113,11 +113,22 @@ jobs:
           # Give Kubernetes a moment to process the deployment update
           sleep 3
           
-          # Force delete any pods that are stuck in Terminating state
+          # Clean up any stuck pods from old replica sets
+          echo "Checking for stuck pods..."
+          
+          # Delete pods stuck in Pending state (usually due to insufficient resources)
+          PENDING_PODS=$(kubectl get pods -n production -l app=nautilus-backend --field-selector=status.phase=Pending -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+          if [ ! -z "$PENDING_PODS" ]; then
+            echo "Force deleting pending pods: $PENDING_PODS"
+            kubectl delete pods -n production -l app=nautilus-backend --field-selector=status.phase=Pending --grace-period=0 --force 2>/dev/null || true
+            sleep 2
+          fi
+          
+          # Delete pods stuck in Terminating state
           TERMINATING_PODS=$(kubectl get pods -n production -l app=nautilus-backend --field-selector=status.phase=Terminating -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
           if [ ! -z "$TERMINATING_PODS" ]; then
             echo "Force deleting terminating pods: $TERMINATING_PODS"
-            kubectl delete pods -n production -l app=nautilus-backend --grace-period=0 --force 2>/dev/null || true
+            kubectl delete pods -n production -l app=nautilus-backend --field-selector=status.phase=Terminating --grace-period=0 --force 2>/dev/null || true
             sleep 2
           fi
           
