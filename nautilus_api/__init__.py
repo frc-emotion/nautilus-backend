@@ -78,10 +78,15 @@ def create_app():
 
     app = Quart(__name__)
 
-    # Enable CORS for all routes
-    app = cors(app, 
-               allow_origin="*",
-           ) # TODO: SHOULD BE CHANGED TO THE FRONTEND URL
+    # Enable CORS for specific origins based on environment
+    allowed_origins = {
+        "dev": ["http://localhost:3000", "http://localhost:19006"],  # Local dev
+        "stage": ["https://staging.team2658.org", "https://*.team2658.org"],
+        "prod": ["https://team2658.org", "https://*.team2658.org"]
+    }
+    
+    origins = allowed_origins.get(Config.ENVIRONMENT, ["*"])
+    app = cors(app, allow_origin=origins)
 
     rate_limiter = RateLimiter(app, key_function=get_id, default_limits=[
         RateLimit(3, timedelta(seconds=1)),
@@ -102,18 +107,19 @@ def create_app():
     mongo_client = AsyncIOMotorClient(Config.MONGO_URI)
     app.db = mongo_client[Config.DB_NAME]
 
-    async_expo_client = httpx.AsyncClient(
-        headers={
-            "Authorization": f"Bearer {Config.EXPO_TOKEN}",
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-    )
+    # LEGACY: Push notification client (not used - frontend doesn't implement push notifications)
+    # async_expo_client = httpx.AsyncClient(
+    #     headers={
+    #         "Authorization": f"Bearer {Config.EXPO_TOKEN}",
+    #         "Accept": "application/json",
+    #         "Content-Type": "application/json",
+    #     }
+    # )
     
     app.http_client = httpx.AsyncClient()
 
-    push_client = AsyncPushClient(session=async_expo_client)
-    app.push_client = push_client
+    # push_client = AsyncPushClient(session=async_expo_client)
+    # app.push_client = push_client
 
     # Set the logger for the app
     app.logger = logger
@@ -139,6 +145,11 @@ def create_app():
             return ":)"
         
         return "greetings curious one"
+    
+    @app.route("/health")
+    async def health():
+        """Health check endpoint for Railway and monitoring"""
+        return {"status": "healthy", "environment": Config.ENVIRONMENT, "version": Config.API_VERSION}, 200
     
     @app.route("/migrate")
     async def migrate():
