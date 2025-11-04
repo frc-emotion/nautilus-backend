@@ -30,5 +30,5 @@ EXPOSE 7001
 # Docker HEALTHCHECK is disabled in favor of Railway's health checks
 
 # Run the application with hypercorn
-# Railway's startCommand in railway.toml will override this CMD
+# Uses shell to expand PORT variable (Railway sets PORT dynamically)
 CMD ["sh", "-c", "hypercorn main:app --bind 0.0.0.0:${PORT:-7001} --workers 2"]
