@@ -4,7 +4,7 @@ FROM python:3.13-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    POETRY_VERSION=1.6.1 \
+    POETRY_VERSION=1.8.4 \
     PIP_DISABLE_PIP_VERSION_CHECK=on
 
 # Install poetry
