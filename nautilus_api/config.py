@@ -8,8 +8,8 @@ class Config:
     # prod, stage, dev
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "dev") 
 
-    # Expo push token
-    EXPO_TOKEN: str = os.getenv("EXPO_TOKEN", "")
+    # Expo push token (LEGACY - not used, frontend doesn't implement push notifications)
+    # EXPO_TOKEN: str = os.getenv("EXPO_TOKEN", "")
     
     # Secret key for JWT encoding/decoding
     JWT_SECRET: str = os.getenv("JWT_SECRET", "")
@@ -55,19 +55,17 @@ class Config:
 
     MAILGUN_FROM_EMAIL: str = os.getenv("MAILGUN_FROM_EMAIL", "")
 
-    # If dev/stage then port 7001
-    # If prod then port 7000
-    PORT: int = 7001 if ENVIRONMENT == "dev" or ENVIRONMENT == "stage" else 7000 
+    # Application port (Railway will proxy external traffic to this internal port)
+    PORT: int = int(os.getenv("PORT", "7001"))
 
-    # If dev then http://localhost:7001
-    # if stage then https://staging.team2658.org
-    # If prod then https://api.team2658.org
-    API_URL: str = "http://localhost:7001" if ENVIRONMENT == "dev" else ("http://staging.team2658.org" if ENVIRONMENT == "stage" else "http://api.team2658.org")
+    # API URL based on environment
+    # Railway handles external routing, these are the public URLs
+    API_URL: str = "http://localhost:7001" if ENVIRONMENT == "dev" else ("https://staging.team2658.org" if ENVIRONMENT == "stage" else "https://api.team2658.org")
 
     DISCORD_WEBHOOK: str = os.getenv("DISCORD_WEBHOOK", "")
 
-    APP_MIGRATION_MEETING: str = os.getenv("APP_MIGRATION_MEETING", "")
-    
-    APP_MIGRATION_LEAD: str = os.getenv("APP_MIGRATION_LEAD", "")
+    # LEGACY: API v1.0 to v1.1 migration variables (migration already completed)
+    # APP_MIGRATION_MEETING: str = os.getenv("APP_MIGRATION_MEETING", "")
+    # APP_MIGRATION_LEAD: str = os.getenv("APP_MIGRATION_LEAD", "")
     
     

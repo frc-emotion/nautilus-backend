@@ -171,19 +171,20 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
     # Update user's 4.5 status
     await users_collection.update_one({"_id": user["_id"]}, {"$set": {"fourpointfive": user["4.5"]}})
 
+    # LEGACY: Migration code (commented out - migration already completed)
     # Check if user student_id exists in meeting users logged by searching foro _id in meetings collection
-    meeting = await meetings_collection.find_one({"_id": int(Config.APP_MIGRATION_MEETING)})
+    # meeting = await meetings_collection.find_one({"_id": int(Config.APP_MIGRATION_MEETING)})
 
-    if not meeting:
-        current_app.logger.info(f"Meeting {Config.APP_MIGRATION_MEETING} not found")
-        return
+    # if not meeting:
+    #     current_app.logger.info(f"Meeting {Config.APP_MIGRATION_MEETING} not found")
+    #     return
     
-    if user["student_id"] in meeting["members_logged"]:
-        current_app.logger.info(f"User {user['student_id']} already has migration meeting logged")
-    else:
-        current_app.logger.info(f"User {user['student_id']} does not have migration meeting logged")
-        # Update meeting's members_logged only if user is not already in the list
-        await meetings_collection.update_one({"_id": int(Config.APP_MIGRATION_MEETING)}, {"$addToSet": {"members_logged": int(user["_id"])}})
+    # if user["student_id"] in meeting["members_logged"]:
+    #     current_app.logger.info(f"User {user['student_id']} already has migration meeting logged")
+    # else:
+    #     current_app.logger.info(f"User {user['student_id']} does not have migration meeting logged")
+    #     # Update meeting's members_logged only if user is not already in the list
+    #     await meetings_collection.update_one({"_id": int(Config.APP_MIGRATION_MEETING)}, {"$addToSet": {"members_logged": int(user["_id"])}})
 
     # Go through hours collection and update user's hours via attendance collection
     hours = await hours_collection.find_one({"student_id": user["student_id"]})
@@ -220,26 +221,26 @@ async def migrate_1_0_to_1_1(users_collection, hours_collection, collection_4_5,
         
         current_app.logger.info(f"Current term: {current_term}, Current year: {current_year}")
 
-        # Add hours to user
-        toInsert = {
-            "meeting_id": int(Config.APP_MIGRATION_MEETING),
-            "lead_id": int(Config.APP_MIGRATION_LEAD),
-            "time_received": current_time,
-            "flag": False,
-            "hours": hours["hours"],
-            "term": current_term,
-            "year": current_year
-        }
+        # LEGACY: Add hours to user (commented out - migration already completed)
+        # toInsert = {
+        #     "meeting_id": int(Config.APP_MIGRATION_MEETING),
+        #     "lead_id": int(Config.APP_MIGRATION_LEAD),
+        #     "time_received": current_time,
+        #     "flag": False,
+        #     "hours": hours["hours"],
+        #     "term": current_term,
+        #     "year": current_year
+        # }
 
-        # Check if user already has hours in attendance collection
-        if await attendance_collection.find_one({"_id": user_id["_id"]}):
-            current_app.logger.info(f"User {user['student_id']} already has hours in attendance collection")
-            # Insert in logs array
-            await attendance_collection.update_one({"_id": user_id["_id"]}, {"$push": {"logs": toInsert}})
-        else:
-            current_app.logger.info(f"User {user['student_id']} does not have hours in attendance collection")
-            # Create new document
-            await attendance_collection.insert_one({"_id": user_id["_id"], "logs": [toInsert]})
+        # LEGACY: Check if user already has hours in attendance collection (commented out)
+        # if await attendance_collection.find_one({"_id": user_id["_id"]}):
+        #     current_app.logger.info(f"User {user['student_id']} already has hours in attendance collection")
+        #     # Insert in logs array
+        #     await attendance_collection.update_one({"_id": user_id["_id"]}, {"$push": {"logs": toInsert}})
+        # else:
+        #     current_app.logger.info(f"User {user['student_id']} does not have hours in attendance collection")
+        #     # Create new document
+        #     await attendance_collection.insert_one({"_id": user_id["_id"], "logs": [toInsert]})
 
 
         # Update user's hours in attendance collection

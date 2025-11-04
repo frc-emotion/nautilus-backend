@@ -42,16 +42,16 @@ async def delete_notification_token() -> tuple[Dict[str, Any], int]:
     result: Dict[str, Any] = await notification_controller.delete_notification_token(user_id)
     return jsonify(result), result.get("status", 200)
 
-# Trigger notification
-@notification_api.route("/trigger", methods=["POST"])
-@require_access(minimum_role="executive")
-async def trigger_notification() -> tuple[Dict[str, Any], int]:
-    """Trigger a notification for a user."""
-    data: Dict[str, Any] = await request.get_json()
-    requester_id = g.user.get("user_id", "Unknown")
-    current_app.logger.info(f"User {requester_id} triggering notification with data: {data}")
-    result: Dict[str, Any] = await notification_controller.trigger_notification(data)
-    return jsonify(result), result.get("status", 200)
+# LEGACY: Push notification endpoint (disabled - frontend doesn't implement push notifications)
+# @notification_api.route("/trigger", methods=["POST"])
+# @require_access(minimum_role="executive")
+# async def trigger_notification() -> tuple[Dict[str, Any], int]:
+#     """Trigger a notification for a user."""
+#     data: Dict[str, Any] = await request.get_json()
+#     requester_id = g.user.get("user_id", "Unknown")
+#     current_app.logger.info(f"User {requester_id} triggering notification with data: {data}")
+#     result: Dict[str, Any] = await notification_controller.trigger_notification(data)
+#     return jsonify(result), result.get("status", 200)
 
 @notification_api.route("/", methods=["PUT"])
 @require_access(minimum_role="member")
