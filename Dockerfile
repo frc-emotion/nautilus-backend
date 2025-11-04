@@ -23,12 +23,12 @@ RUN poetry config virtualenvs.create false && \
 # Copy application code
 COPY . /app
 
-# Expose port 7001 (Railway will proxy external traffic to this port)
+# Expose port (Railway will set PORT env var dynamically)
 EXPOSE 7001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:7001/health').read()"
+# Note: Railway uses its own health check mechanism (healthcheckPath in railway.toml)
+# Docker HEALTHCHECK is disabled in favor of Railway's health checks
 
 # Run the application with hypercorn
-CMD ["hypercorn", "main:app", "--bind", "0.0.0.0:7001", "--workers", "2"]
+# Railway's startCommand in railway.toml will override this CMD
+CMD ["sh", "-c", "hypercorn main:app --bind 0.0.0.0:${PORT:-7001} --workers 2"]
