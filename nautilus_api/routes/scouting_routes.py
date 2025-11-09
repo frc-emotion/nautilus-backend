@@ -68,8 +68,52 @@ def load_competitions():
     with open("competitions.json", "r") as file:
         return json.load(file)
 
-@scouting_api.route("competitions", methods=["GET"])
+@scouting_api.route("/competitions", methods=["GET"])
 @require_access(minimum_role="member")
 async def get_competitions() -> tuple[Dict[str, Any], int]:
-    """Yurrr."""
-    return load_competitions()
+    """
+    Get list of all competitions.
+    
+    Returns:
+        List of competition objects with label and value
+    """
+    return load_competitions(), 200
+
+
+@scouting_api.route("/team_aggregation", methods=["GET"])
+@require_access(minimum_role="member")
+async def get_team_aggregation() -> tuple[Dict[str, Any], int]:
+    """
+    Get aggregated scouting data for a team at a competition.
+    
+    Query Parameters:
+        competition: Competition ID (e.g., "sdr-practice-2025")
+        team: Team number (e.g., "254")
+    
+    Returns:
+        TeamScoutingAggregation JSON
+    """
+    from nautilus_api.services import scouting_service
+    from nautilus_api.utils.errors import BadRequestError
+    
+    competition = request.args.get("competition")
+    team = request.args.get("team")
+    
+    # Validate inputs
+    if not competition:
+        return jsonify({"error": {"code": "BAD_REQUEST", "message": "Missing required parameter: competition"}}), 400
+    if not team:
+        return jsonify({"error": {"code": "BAD_REQUEST", "message": "Missing required parameter: team"}}), 400
+    
+    # Validate team is numeric
+    if not str(team).replace("-", "").isdigit():
+        return jsonify({"error": {"code": "BAD_REQUEST", "message": "Team number must be numeric"}}), 400
+    
+    current_app.logger.info(f"Fetching scouting aggregation for team {team} at {competition}")
+    
+    try:
+        aggregation = await scouting_service.get_team_aggregation(competition, str(team))
+        return jsonify(aggregation.model_dump()), 200
+    except Exception as e:
+        current_app.logger.error(f"Error fetching team aggregation: {e}")
+        return jsonify({"error": {"code": "INTERNAL_ERROR", "message": "Failed to fetch scouting data"}}), 500

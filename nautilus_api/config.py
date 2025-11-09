@@ -1,4 +1,8 @@
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Config:
     # MongoDB connection URI, defaulting to localhost for development
@@ -63,6 +67,38 @@ class Config:
     API_URL: str = "http://localhost:7001" if ENVIRONMENT == "dev" else ("https://staging.team2658.org" if ENVIRONMENT == "stage" else "https://api.team2658.org")
 
     DISCORD_WEBHOOK: str = os.getenv("DISCORD_WEBHOOK", "")
+
+    # The Blue Alliance API Key
+    TBA_AUTH_KEY: str = os.getenv("TBA_AUTH_KEY", "1R1aiYaObNnTPZOGe8kgQSgZibz97PNCYcE7hQxRBoLLyZ2mxQJHl2lPFR1y20VU")
+    
+    # Cache TTL for TBA API responses in seconds
+    CACHE_TTL_SECONDS: int = int(os.getenv("CACHE_TTL_SECONDS", "180"))
+
+    # FRC 2025 Reefscape Scoring Configuration
+    # TODO: Verify and update with official 2025 Reefscape point values
+    SCORING_CONFIG = {
+        "auto": {
+            # Points per coral level [L1, L2, L3, L4]
+            "coral_points_per_level": [3, 4, 6, 7],  # Placeholder values
+            "algae_points": {
+                "ground": 3,  # Processor (ground) algae points
+                "net": 4      # Barge (net) algae points
+            }
+        },
+        "teleop": {
+            # Points per coral level [L1, L2, L3, L4]
+            "coral_points_per_level": [2, 3, 4, 5],  # Placeholder values
+            "algae_points": {
+                "ground": 2,  # Processor (ground) algae points
+                "net": 3      # Barge (net) algae points
+            }
+        },
+        "climb_points": {
+            "PARK": 2,
+            "SHALLOW_CAGE": 6,
+            "DEEP_CAGE": 12
+        }
+    }
 
     # LEGACY: API v1.0 to v1.1 migration variables (migration already completed)
     # APP_MIGRATION_MEETING: str = os.getenv("APP_MIGRATION_MEETING", "")

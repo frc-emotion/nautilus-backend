@@ -163,6 +163,13 @@ def create_app():
         
         return "if you see this it means it worked"
 
+    # Health check endpoint
+    @app.route("/api/health", methods=["GET"])
+    async def health_check():
+        """Health check endpoint."""
+        from datetime import datetime
+        return {"ok": True, "ts": datetime.utcnow().isoformat() + "Z"}, 200
+
     # Register API routes
     app.register_blueprint(account_routes.account_api, url_prefix="/api/account")
     app.register_blueprint(auth_routes.auth_api, url_prefix="/api/auth")
@@ -170,5 +177,9 @@ def create_app():
     app.register_blueprint(meeting_routes.meeting_api, url_prefix="/api/meetings")
     app.register_blueprint(notification_routes.notification_api, url_prefix="/api/notifications")
     app.register_blueprint(scouting_routes.scouting_api, url_prefix="/api/scouting")
+    
+    # Import and register TBA routes
+    from nautilus_api.routes import tba_routes
+    app.register_blueprint(tba_routes.tba_api, url_prefix="/api/tba")
 
     return app
