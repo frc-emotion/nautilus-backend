@@ -120,3 +120,18 @@ async def get_team_event_matches(team_number: str, event_key: str) -> Optional[L
     """
     endpoint = f"/team/frc{team_number}/event/{event_key}/matches"
     return await _make_tba_request(endpoint)
+
+
+@cached(ttl_seconds=Config.CACHE_TTL_SECONDS)
+async def get_event_matches(event_key: str) -> Optional[List[Dict[str, Any]]]:
+    """
+    Get all matches for an event with full score breakdowns.
+    
+    Args:
+        event_key: Event key (e.g., "2024casd")
+    
+    Returns:
+        List of match objects with score_breakdown data
+    """
+    endpoint = f"/event/{event_key}/matches"
+    return await _make_tba_request(endpoint)

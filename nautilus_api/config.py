@@ -69,7 +69,7 @@ class Config:
     DISCORD_WEBHOOK: str = os.getenv("DISCORD_WEBHOOK", "")
 
     # The Blue Alliance API Key
-    TBA_AUTH_KEY: str = os.getenv("TBA_AUTH_KEY", "1R1aiYaObNnTPZOGe8kgQSgZibz97PNCYcE7hQxRBoLLyZ2mxQJHl2lPFR1y20VU")
+    TBA_AUTH_KEY: str = os.getenv("TBA_AUTH_KEY", "")
     
     # Cache TTL for TBA API responses in seconds
     CACHE_TTL_SECONDS: int = int(os.getenv("CACHE_TTL_SECONDS", "180"))
