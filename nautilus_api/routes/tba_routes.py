@@ -3,7 +3,7 @@ TBA API proxy routes.
 """
 from quart import Blueprint, jsonify, request, current_app
 from typing import Dict, Any
-from nautilus_api.services import tba_service, opr_service
+from nautilus_api.services import tba_service
 from nautilus_api.utils.errors import BadRequestError, format_error_response, TBAError
 
 
@@ -60,45 +60,11 @@ async def get_event_summary() -> tuple[Dict[str, Any], int]:
         raise TBAError(f"Failed to fetch TBA data: {str(e)}")
 
 
-@tba_api.route("/oprs/<event_key>", methods=["GET"])
-async def get_advanced_oprs(event_key: str) -> tuple[Dict[str, Any], int]:
-    """
-    Get advanced OPR-style metrics for all teams at an event.
-    
-    Path Parameters:
-        event_key: Event key (e.g., "2024casd")
-    
-    Returns:
-        AdvancedOprResponse JSON with per-team OPR metrics
-        
-    Example Response:
-        {
-          "event": "2024casd",
-          "team_metrics": {
-            "254": {
-              "total_points_opr": 120.23,
-              "total_notes_opr": 18.2,
-              "total_note_points_opr": 54.2,
-              "auto_notes_opr": 3.4,
-              "teleop_notes_opr": 12.1,
-              "amp_notes_opr": 2.5,
-              "speaker_notes_opr": 10.7,
-              "amplified_notes_opr": 5.2,
-              "endgame_points_opr": 17.3
-            }
-          }
-        }
-    """
-    if not event_key:
-        raise BadRequestError("Missing required parameter: event_key")
-    
-    current_app.logger.info(f"Fetching advanced OPRs for event {event_key}")
-    
-    try:
-        oprs = await opr_service.get_cached_advanced_oprs(event_key)
-        return jsonify(oprs.model_dump()), 200
-    except TBAError as e:
-        raise
-    except Exception as e:
-        current_app.logger.error(f"Error computing advanced OPRs: {e}")
-        raise TBAError(f"Failed to compute OPRs: {str(e)}")
+
+
+
+
+
+
+
+

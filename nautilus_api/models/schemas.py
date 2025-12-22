@@ -113,27 +113,4 @@ class HealthResponse(BaseModel):
     ts: str = Field(..., description="ISO timestamp")
 
 
-# ============================================================================
-# Advanced OPR Analytics Schema
-# ============================================================================
 
-class TeamOprMetrics(BaseModel):
-    """OPR-style metrics for a single team."""
-    total_points_opr: float = Field(..., description="Total points contribution (OPR)")
-    total_notes_opr: float = Field(..., description="Total notes contribution")
-    total_note_points_opr: float = Field(..., description="Total note points contribution")
-    auto_notes_opr: float = Field(..., description="Auto notes contribution")
-    teleop_notes_opr: float = Field(..., description="Teleop notes contribution")
-    amp_notes_opr: float = Field(..., description="Amp notes contribution")
-    speaker_notes_opr: float = Field(..., description="Speaker notes contribution")
-    amplified_notes_opr: float = Field(..., description="Amplified speaker notes contribution")
-    endgame_points_opr: float = Field(..., description="Endgame points contribution")
-
-
-class AdvancedOprResponse(BaseModel):
-    """Response for advanced OPR analytics endpoint."""
-    event: str = Field(..., description="Event key (e.g., '2024casd')")
-    team_metrics: Dict[str, TeamOprMetrics] = Field(
-        ...,
-        description="Mapping from team number (e.g., '254') to OPR metrics"
-    )
