@@ -100,25 +100,6 @@ class Config:
         }
     }
 
-    # ============================================================================
-    # Prediction System Configuration
-    # ============================================================================
-    
-    # Elo Configuration
-    ELO_K_FACTOR: float = float(os.getenv("ELO_K_FACTOR", "12"))
-    ELO_INITIAL_RATING: float = float(os.getenv("ELO_INITIAL_RATING", "1500"))
-    ELO_SEASON_DECAY: float = float(os.getenv("ELO_SEASON_DECAY", "0.6"))
-    
-    # Prediction Configuration
-    PREDICTION_OPR_WEIGHT: float = float(os.getenv("PREDICTION_OPR_WEIGHT", "0.6"))
-    PREDICTION_SCORE_SPREAD: float = float(os.getenv("PREDICTION_SCORE_SPREAD", "20"))
-    PREDICTION_REGRESSION_FACTOR: float = float(os.getenv("PREDICTION_REGRESSION_FACTOR", "0.85"))
-    
-    # Feature Flags
-    USE_ELO_PREDICTIONS: bool = os.getenv("USE_ELO_PREDICTIONS", "true").lower() == "true"
-    USE_DPR_ADJUSTMENT: bool = os.getenv("USE_DPR_ADJUSTMENT", "true").lower() == "true"
-    USE_REGRESSION_TO_MEAN: bool = os.getenv("USE_REGRESSION_TO_MEAN", "true").lower() == "true"
-
     # LEGACY: API v1.0 to v1.1 migration variables (migration already completed)
     # APP_MIGRATION_MEETING: str = os.getenv("APP_MIGRATION_MEETING", "")
     # APP_MIGRATION_LEAD: str = os.getenv("APP_MIGRATION_LEAD", "")
