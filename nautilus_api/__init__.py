@@ -149,7 +149,12 @@ def create_app():
     @app.route("/health")
     async def health():
         """Health check endpoint for Railway and monitoring"""
-        return {"status": "healthy", "environment": Config.ENVIRONMENT, "version": Config.API_VERSION}, 200
+        return {
+            "status": "healthy",
+            "environment": Config.ENVIRONMENT,
+            "version": Config.API_VERSION,
+            "school_years": list(Config.SCHOOL_YEAR.keys()),
+        }, 200
     
     @app.route("/migrate")
     async def migrate():

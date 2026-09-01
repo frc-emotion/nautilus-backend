@@ -49,6 +49,16 @@ class Config:
             },
             
         },
+        "2026-2027": { # Year that school starts (PUSD 2026-27 calendar, rev. 02/26/26)
+            1: { # Term 1: first day of school Thu 2026-08-13 through semester break
+                "start": 1786604400, # 2026-08-13 00:00 PDT
+                "end": 1800864000,   # 2027-01-25 00:00 PST (non-student day between semesters)
+            },
+            2: { # Term 2: semester 2 through last day of school (Thu 2027-06-03) plus a week of buffer
+                "start": 1800864000, # 2027-01-25 00:00 PST
+                "end": 1812783599,   # 2027-06-11 23:59:59 PDT
+            },
+        },
     }
 
     ROLE_HIERARCHY = ["unverified", "member", "leadership", "executive", "advisor", "admin"]
