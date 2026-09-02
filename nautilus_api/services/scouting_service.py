@@ -23,7 +23,7 @@ async def get_collection(collection_name: str):
 async def submit(data, collection_name):
     """Submit scouting data to MongoDB."""
     scouting_collection = await get_collection(collection_name)
-    print(await scouting_collection.insert_one(data))
+    await scouting_collection.insert_one(data)
     return
 
 

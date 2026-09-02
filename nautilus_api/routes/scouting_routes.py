@@ -1,10 +1,11 @@
 import json
-import jwt
 from quart import Blueprint, jsonify, g, request, current_app
 from typing import Optional, Any, Dict
 from nautilus_api.config import Config
 from nautilus_api.controllers import scouting_controller
+from nautilus_api.controllers.utils import validate_data
 from nautilus_api.routes.utils import require_access, sanitize_request
+from nautilus_api.schemas.scouting_schema import ScoutingFormSchema, PitScoutingFormSchema
 
 scouting_api = Blueprint('scouting_api', __name__)
 
@@ -48,8 +49,11 @@ async def scouting_form() -> tuple[Dict[str, Any], int]:
     data = await sanitize_request(uncleaned_data)
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} submitting a new scouting form with data: {data}")
-    await scouting_controller.submit_data(data, "scouting")
-    return {"yes":"yes"}, 200
+    validated_data, error = validate_data(ScoutingFormSchema, data, "Scouting Form")
+    if error:
+        return jsonify(validated_data), validated_data.get("status", 400)
+    result = await scouting_controller.submit_data(validated_data.model_dump(), "scouting")
+    return jsonify(result), result.get("status", 200)
 
 @scouting_api.route("/pitform", methods = ["POST"])
 @require_access(minimum_role = "member")
@@ -59,8 +63,11 @@ async def pitscouting_form() -> tuple[Dict[str, Any], int]:
     data = await sanitize_request(uncleaned_data)
     requester_id = g.user.get("user_id", "Unknown")
     current_app.logger.info(f"User {requester_id} submitting a new pitscouting form with data: {data}")
-    await scouting_controller.submit_data(data, "pitscouting")
-    return {"yes": "yes"}, 200
+    validated_data, error = validate_data(PitScoutingFormSchema, data, "Pit Scouting Form")
+    if error:
+        return jsonify(validated_data), validated_data.get("status", 400)
+    result = await scouting_controller.submit_data(validated_data.model_dump(), "pitscouting")
+    return jsonify(result), result.get("status", 200)
 
 
 

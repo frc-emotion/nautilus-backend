@@ -74,7 +74,7 @@ async def get_all_users() -> list[Dict[str, Any]]:
 
     # Remove password field from all users
     for user in allUsers:
-        del user["password"]
+        user.pop("password", None)
 
     return allUsers
 
@@ -84,15 +84,15 @@ async def get_user_directory() -> list[Dict[str, Any]]:
 
     allUsers = await account_collection.find().to_list(None)
 
-    # Remove password field from all users
+    # Remove sensitive fields from all users (pop is safe when a field is absent)
     for user in allUsers:
-        del user["password"]
-        del user["email"]
-        del user["api_version"]
-        del user["phone"]
-        del user["created_at"]
-        del user["student_id"]
-        del user["notification_token"]
+        user.pop("password", None)
+        user.pop("email", None)
+        user.pop("api_version", None)
+        user.pop("phone", None)
+        user.pop("created_at", None)
+        user.pop("student_id", None)
+        user.pop("notification_token", None)
 
     return allUsers
 
@@ -132,22 +132,13 @@ async def mass_delete_users(user_ids: list[int]) -> DeleteResult:
     account_collection = await get_collection("users")
     return await account_collection.delete_many({"_id": {"$in": user_ids}})
 
-async def delete_user_meetings(user_id:int)->UpdateResult:
-    print(user_id)
-    """Delete a user's id in meeting attendance by id."""
-    student=await find_user_by_id(user_id)
-    student_id=student.get("student_id")
-    meetings_collection=await get_collection("meetings")
-    for document in await meetings_collection.find({}).to_list(length=None):
-            print(f"Document: {document}")
-
-    
-    result= await meetings_collection.update_many(
-        {"members_logged": student_id},
-        {"$pull": {"members_logged": student_id}}
+async def delete_user_meetings(user_id: int) -> UpdateResult:
+    """Remove a user's id from every meeting's members_logged array."""
+    meetings_collection = await get_collection("meetings")
+    return await meetings_collection.update_many(
+        {"members_logged": user_id},
+        {"$pull": {"members_logged": user_id}}
     )
-    print(result)
-    return(result)
 
 async def delete_user_attendance(user_id:int)->DeleteResult:
     attendance_collection=await get_collection("attendance")
