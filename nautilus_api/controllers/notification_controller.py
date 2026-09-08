@@ -11,23 +11,34 @@ from quart import current_app
 from nautilus_api.config import Config
 from nautilus_api.controllers.utils import error_response, success_response, validate_data
 from nautilus_api.schemas.notification_schema import InitialNotificationSchema, RemoveNotificationSchema, TriggerNotificationSchema, UpdateNotificationSchema
-from nautilus_api.services import notification_service
+from nautilus_api.services import notification_service, push_notification_service
 
 async def update_notification_token(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
-    """Update a user's notification token by user ID."""
+    """Register (or refresh) a user's Expo push token."""
 
-    if "token" not in data:
+    token = data.get("token")
+
+    if not token:
         return error_response("Token not provided", 400)
 
-    if not (result := await notification_service.update_notification_token(user_id, data.get("token"))).modified_count:
-        return error_response("Not found or unchanged", 404)
-    
+    if not push_notification_service.is_valid_expo_token(token):
+        return error_response("Invalid Expo push token", 400)
+
+    result = await push_notification_service.save_device_token(user_id, token)
+
+    # matched_count with no modification means the device re-sent the token it
+    # already had -- that's a successful registration, not an error.
+    if not result.matched_count:
+        return error_response("User not found", 404)
+
     return success_response("Notification token updated", 200)
 
 async def delete_notification_token(user_id: int) -> Dict[str, Any]:
-    """Delete a user's notification token by user ID."""
-    if not (result := await notification_service.delete_notification_token(user_id)).modified_count:
-        return error_response("Not found or unchanged", 404)
+    """Delete a user's notification token by user ID. Idempotent."""
+    result = await push_notification_service.remove_device_token(user_id)
+
+    if not result.matched_count:
+        return error_response("User not found", 404)
 
     return success_response("Notification token deleted", 200)
 
@@ -188,9 +199,19 @@ async def add_noti(noti_data):
     result = await notification_service.add_notification(validated_data)
     if not result.inserted_id:
         return error_response("Not found or unchanged", 404)
-    # if not (result := await notification_service.add_notification(validated_data)).modified_count:
-    #     return error_response("Not found or unchanged", 404)
-    return success_response("Notification added", 200, {"update": validated_data["update"]})
+
+    # Fan the new announcement out as an out-of-app push notification. All of the
+    # push machinery lives in push_notification_service; it never raises, so a
+    # delivery problem can't fail the announcement itself.
+    push_result = await push_notification_service.broadcast_announcement(
+        validated_data["update"],
+        update_id=result.inserted_id,
+        created_by=validated_data["created_by"],
+    )
+
+    return success_response(
+        "Notification added", 200, {"update": validated_data["update"], "push": push_result}
+    )
 
 async def remove_noti(noti_data):
     validated_data, error = validate_data(RemoveNotificationSchema, noti_data)

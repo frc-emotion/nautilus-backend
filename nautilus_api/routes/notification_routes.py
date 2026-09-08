@@ -82,23 +82,25 @@ async def send_contact_form():
     result = await notification_controller.send_contact_form(data)
     return jsonify({"status": result.status_code, "message": "Webhook sent"})
 
-@require_access(minimum_role="executive")
+# NOTE: @route must be the OUTERMOST decorator, otherwise the blueprint
+# registers the undecorated function and require_access never runs.
 @notification_api.route("/add_noti", methods = ["POST"])
+@require_access(minimum_role="executive")
 async def add_noti():
     data = await request.get_json()
     # update_value = data.get("update")
     result = await notification_controller.add_noti(data)
     return jsonify({"status": result["status"], "message": result["message"]})
 
-@require_access(minimum_role="executive")
 @notification_api.route("/update_noti", methods = ["PUT"])
+@require_access(minimum_role="executive")
 async def update_noti():
     data:dict[str,Any] = await request.get_json()
     result = await notification_controller.update_noti(data)
     return jsonify({"status": result["status"], "message": result["message"]})
 
-@require_access(minimum_role="executive")
 @notification_api.route("/delete_noti", methods = ["DELETE"])
+@require_access(minimum_role="executive")
 async def delete_noti():
     data:dict[str,Any] = await request.get_json()
     result = await notification_controller.remove_noti(data)

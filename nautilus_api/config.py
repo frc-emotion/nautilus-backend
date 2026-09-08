@@ -12,8 +12,9 @@ class Config:
     # prod, stage, dev
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "dev") 
 
-    # Expo push token (LEGACY - not used, frontend doesn't implement push notifications)
-    # EXPO_TOKEN: str = os.getenv("EXPO_TOKEN", "")
+    # Expo access token. Only required when the Expo project has enhanced push
+    # security enabled; push works without it otherwise.
+    EXPO_TOKEN: str = os.getenv("EXPO_TOKEN", "")
     
     # Secret key for JWT encoding/decoding
     JWT_SECRET: str = os.getenv("JWT_SECRET", "")
